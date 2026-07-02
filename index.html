@@ -318,11 +318,11 @@
 
     <div class="feature">
       <div class="feature-eyebrow">TODAY'S PICK</div>
-      <div class="feature-title">データガバナンス、いってみましょう</div>
-      <div class="feature-desc">まずは気軽な5問セットから。</div>
+      <div class="feature-title" id="todays-pick-title">今日のテーマを準備中です</div>
+      <div class="feature-desc" id="todays-pick-desc">まずは気軽な5問セットから。</div>
       <div class="feature-btns">
-        <button class="btn btn-solid" onclick="startNewForCategory('governance',5)">新しい問題を解く</button>
-        <button class="btn btn-outline" onclick="startNewForCategory('governance',1)">1問だけ</button>
+        <button class="btn btn-solid" id="todays-pick-btn" onclick="startTodaysPick()">新しい問題を解く</button>
+        <button class="btn btn-outline" id="todays-pick-one-btn" onclick="startTodaysPickOne()">1問だけ</button>
       </div>
     </div>
 
@@ -748,6 +748,111 @@ function markStudiedToday(){
 }
 
 /* ============================================================
+   Today's Pick（日替わりランダム・新規5問）
+   キー: dm-study-todays-pick
+   値: { date: 'YYYY-MM-DD', completed: boolean, categoryKey: string | null }
+   ※ 未学習問題が残っている分野から、その日のテーマを1つ選ぶ。
+   ※ 5問セットを最後まで解いたら、その日だけ完了扱いにする。
+   ※ 全問一周済みなら、復習・模擬試験への案内に切り替える。
+============================================================ */
+const TODAYS_PICK_KEY = 'dm-study-todays-pick';
+
+function loadTodaysPick(){
+  try{
+    const raw = localStorage.getItem(TODAYS_PICK_KEY);
+    const data = raw ? JSON.parse(raw) : null;
+    if(!data || data.date !== todayStr()){
+      return { date: todayStr(), completed:false, categoryKey:null };
+    }
+    return { date: todayStr(), completed:!!data.completed, categoryKey:data.categoryKey || null };
+  }catch(e){
+    return { date: todayStr(), completed:false, categoryKey:null };
+  }
+}
+function saveTodaysPick(data){
+  try{ localStorage.setItem(TODAYS_PICK_KEY, JSON.stringify(data)); }catch(e){}
+}
+function isTodaysPickCompleted(){
+  return !!loadTodaysPick().completed;
+}
+function completeTodaysPick(){
+  const data = loadTodaysPick();
+  saveTodaysPick({ date: todayStr(), completed:true, categoryKey:data.categoryKey || null });
+}
+function getNewCategories(){
+  return CATEGORIES.filter(c => getNewQuestions(9999, c.key).length > 0);
+}
+function dateSeed(str){
+  let seed = 0;
+  for(let i = 0; i < str.length; i++) seed = (seed * 31 + str.charCodeAt(i)) >>> 0;
+  return seed;
+}
+function chooseTodaysPickCategory(){
+  const data = loadTodaysPick();
+  const eligible = getNewCategories();
+  if(eligible.length === 0){
+    saveTodaysPick({ date: todayStr(), completed:false, categoryKey:null });
+    return null;
+  }
+
+  // その日のテーマは、完了後や再読み込みでも変わらないように保存しておく
+  if(data.categoryKey && eligible.some(c => c.key === data.categoryKey)){
+    return CATEGORIES.find(c => c.key === data.categoryKey);
+  }
+  if(data.categoryKey && data.completed){
+    const saved = CATEGORIES.find(c => c.key === data.categoryKey);
+    if(saved) return saved;
+  }
+
+  const picked = eligible[dateSeed(todayStr()) % eligible.length];
+  saveTodaysPick({ date: todayStr(), completed:false, categoryKey:picked.key });
+  return picked;
+}
+function renderTodaysPick(){
+  const title = document.getElementById('todays-pick-title');
+  const desc = document.getElementById('todays-pick-desc');
+  const mainBtn = document.getElementById('todays-pick-btn');
+  const oneBtn = document.getElementById('todays-pick-one-btn');
+  if(!title || !desc || !mainBtn || !oneBtn) return;
+
+  const totalNew = getNewQuestions(9999).length;
+  const reviewCount = getReviewQueue(9999).length;
+  const cat = chooseTodaysPickCategory();
+  const done = isTodaysPickCompleted();
+
+  if(totalNew === 0 || !cat){
+    title.textContent = '全問一周済みです';
+    desc.textContent = 'ここからは復習と模擬試験で定着チェックしましょう。シラバス確定後に、本番仕様へ寄せていきます。';
+
+    mainBtn.disabled = reviewCount === 0;
+    mainBtn.textContent = reviewCount > 0 ? `復習する（${reviewCount}問）` : '復習はありません';
+    mainBtn.className = reviewCount > 0 ? 'btn btn-solid' : 'btn btn-disabled';
+    mainBtn.onclick = () => startReview();
+
+    oneBtn.disabled = false;
+    oneBtn.textContent = '模擬試験へ';
+    oneBtn.className = 'btn btn-outline';
+    oneBtn.onclick = () => showMockIntro();
+    return;
+  }
+
+  const catNewCount = getNewQuestions(9999, cat.key).length;
+  title.textContent = `${cat.name}、いってみましょう`;
+  desc.textContent = done
+    ? '今日の分は終わりです。おつかれさまでした。'
+    : `今日のテーマは${cat.name}。未学習 ${catNewCount}問から、まずは5問だけ。`;
+
+  mainBtn.disabled = done;
+  mainBtn.textContent = done ? '今日の分は終わり' : '新しい問題を解く';
+  mainBtn.className = done ? 'btn btn-disabled' : 'btn btn-solid';
+  mainBtn.onclick = () => startTodaysPick();
+
+  oneBtn.disabled = false;
+  oneBtn.textContent = done ? '追加で1問だけ' : '1問だけ';
+  oneBtn.className = 'btn btn-outline';
+  oneBtn.onclick = () => startTodaysPickOne();
+}
+/* ============================================================
    中断・再開セッション（localStorage）
    キー: dm-study-session
    値: { ids: [問題id...], quizIndex, correctCount, mode }
@@ -760,7 +865,7 @@ function saveSession(){
   try{
     localStorage.setItem(SESSION_KEY, JSON.stringify({
       ids: quizQueue.map(q => q.id),
-      quizIndex, correctCount, mode: currentMode
+      quizIndex, correctCount, mode: currentMode, source: quizSource
     }));
   }catch(e){}
 }
@@ -796,6 +901,7 @@ function resumeSession(){
   quizIndex = Math.min(session.quizIndex, restored.length - 1);
   correctCount = session.correctCount || 0;
   currentMode = session.mode || 'new';
+  quizSource = session.source || 'normal';
   showScreen('screen-question');
   renderQuestion();
 }
@@ -994,7 +1100,7 @@ function showScreen(id){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-function goTop(){ renderIndex(); renderResumeCard(); renderMockCard(); showScreen('screen-top'); }
+function goTop(){ renderIndex(); renderTodaysPick(); renderResumeCard(); renderMockCard(); showScreen('screen-top'); }
 function showAllCategories(){ renderAllCategories(); showScreen('screen-all-categories'); }
 
 let detailFrom = 'top';
@@ -1069,28 +1175,39 @@ function backFromGlossary(){
 /* ============================================================
    出題ロジック
 ============================================================ */
-let quizQueue = [], quizIndex = 0, correctCount = 0, currentMode = 'new';
+let quizQueue = [], quizIndex = 0, correctCount = 0, currentMode = 'new', quizSource = 'normal';
 
-function startNewForCategory(key, limit){
-  const qs = getNewQuestions(limit || 5, key);
+function startQuizFromQueue(qs, mode, source){
   if(qs.length === 0) return;
-  quizQueue = qs; currentMode = 'new';
-  quizIndex = 0; correctCount = 0;
+  quizQueue = qs;
+  currentMode = mode || 'new';
+  quizSource = source || 'normal';
+  quizIndex = 0;
+  correctCount = 0;
   showScreen('screen-question');
   renderQuestion();
 }
+function startTodaysPick(){
+  if(isTodaysPickCompleted()) return;
+  const cat = chooseTodaysPickCategory();
+  if(!cat) return;
+  startQuizFromQueue(getNewQuestions(5, cat.key), 'new', 'todaysPick');
+}
+function startTodaysPickOne(){
+  const cat = chooseTodaysPickCategory();
+  if(!cat) return;
+  startQuizFromQueue(getNewQuestions(1, cat.key), 'new', 'normal');
+}
+function startNewForCategory(key, limit){
+  startQuizFromQueue(getNewQuestions(limit || 5, key), 'new', 'normal');
+}
 function startNewQuiz(limit){
-  const qs = getNewQuestions(limit || 5);
-  if(qs.length === 0) return;
-  quizQueue = qs; currentMode = 'new';
-  quizIndex = 0; correctCount = 0;
-  showScreen('screen-question');
-  renderQuestion();
+  startQuizFromQueue(getNewQuestions(limit || 5), 'new', 'normal');
 }
 function startReview(limit, catKey){
   const queue = getReviewQueue(limit || 10, catKey);
   if(queue.length === 0) return;
-  quizQueue = queue; currentMode = 'review';
+  quizQueue = queue; currentMode = 'review'; quizSource = 'normal';
   quizIndex = 0; correctCount = 0;
   showScreen('screen-question');
   renderQuestion();
@@ -1176,6 +1293,9 @@ function nextQuestion(){
 }
 
 function showResult(){
+  if(quizSource === 'todaysPick'){
+    completeTodaysPick();
+  }
   clearSession();
   const total = quizQueue.length;
   document.getElementById('result-score').innerHTML = `${correctCount}<small>/${total}</small>`;
@@ -1198,6 +1318,7 @@ function showResult(){
     sub.textContent = 'ここ、少し苦手かも。いっしょに復習しよう';
   }
   showScreen('screen-result');
+  quizSource = 'normal';
 }
 
 /* ============================================================
@@ -1606,6 +1727,7 @@ function checkCaseAnswers(){
 
 /* 初期描画 */
 renderIndex();
+renderTodaysPick();
 renderResumeCard();
 renderMockCard();
 </script>
