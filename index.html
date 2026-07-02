@@ -133,6 +133,9 @@
   .choice.wrong{ border-color:#D9AAB2; background:#FAEEF0; }
   .choice.wrong .choice-mark{ background:#B85C6B; color:#fff; }
   .choice.dim{ opacity:.5; }
+  .choice.selected{ border-color:#2E2B33; background:#F0EBE0; }
+  .choice.selected .choice-mark{ background:#2E2B33; color:#fff; }
+  .choice, .case-card, .quick-link, .btn, .resume-btn{ -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
   .feedback{ display:none; border-top: 2px solid #2E2B33; padding-top: 18px; margin-bottom: 20px; }
   .feedback.show{ display:block; }
@@ -1673,7 +1676,7 @@ function renderCaseSubs(){
       <div class="case-sub-q">${sub.question}</div>
       <div class="choices" id="case-choices-${si}">
         ${sub.choices.map((c,i) => `
-          <div class="choice" data-sub="${si}" data-index="${i}" onclick="selectCaseChoice(${si}, ${i})">
+          <div class="choice" role="button" tabindex="0" data-sub="${si}" data-index="${i}" onclick="selectCaseChoice(${si}, ${i})" onkeydown="handleCaseChoiceKey(event, ${si}, ${i})">
             <div class="choice-mark">${String.fromCharCode(65+i)}</div>
             <div>${c}</div>
           </div>
@@ -1682,6 +1685,13 @@ function renderCaseSubs(){
       <div class="case-sub-explain" id="case-explain-${si}"></div>
     </div>
   `).join('');
+}
+
+function handleCaseChoiceKey(event, si, i){
+  if(event.key === 'Enter' || event.key === ' '){
+    event.preventDefault();
+    selectCaseChoice(si, i);
+  }
 }
 
 function selectCaseChoice(si, i){
