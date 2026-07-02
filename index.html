@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>データのじかん</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:#F5F1EC; color:#2E2B33; font-family:'Zen Kaku Gothic New',sans-serif; }
+  .frame{ max-width: 460px; margin:0 auto; padding: 34px 22px 60px; }
+  .screen{ display:none; animation: fadeUp .35s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .kicker{ font-size:10.5px; font-weight:700; letter-spacing:0.22em; color:#B08A6C; margin-bottom:10px; }
+  .btn{ font-size:12.5px; font-weight:700; cursor:pointer; padding: 11px 20px; border-radius: 2px; }
+  .btn-solid{ background:#2E2B33; color:#F5F1EC; border:none; }
+  .btn-outline{ background:none; border:1px solid #2E2B33; color:#2E2B33; }
+  .btn-disabled{ background:none; border:1px solid #DCD5C9; color:#B0A99C; cursor:default; }
+  .btn:disabled{ opacity:.5; cursor:default; }
+  .btn-full{ width:100%; }
+  .back-link{ font-size:11.5px; color:#8A8390; background:none; border:none; cursor:pointer; padding:0; margin-bottom: 22px; display:inline-block; }
+
+  .header-row{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 20px; }
+  .headline{ font-family:'Shippori Mincho', serif; font-weight:700; font-size: 21px; letter-spacing: 0.02em; }
+  .header-date{ font-size: 11px; color:#8A8390; }
+
+  .dash{ position:relative; display:flex; align-items:stretch; border-top: 1px solid #2E2B33; border-bottom: 1px solid #DCD5C9; padding: 24px 0 22px; margin-bottom: 26px; }
+  .dash-charm{
+    position:absolute; top:-1px; left:14px; transform: translateY(-50%);
+    width:16px; height:16px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #F3E4CE, #B08A6C 70%);
+    box-shadow: 0 1px 3px rgba(46,43,51,0.25), inset 0 0 0 1px rgba(255,255,255,0.4);
+  }
+  .dash-charm::after{
+    content:''; position:absolute; top:50%; left:50%;
+    width:4px; height:4px; border-radius:50%; background:#F5F1EC;
+    transform: translate(-50%,-50%);
+  }
+  .dash-item{ flex:1; padding: 0 18px; display:flex; flex-direction:column; justify-content:center; }
+  .dash-item + .dash-item{ border-left: 1px solid #DCD5C9; }
+  .dash-item:first-child{ padding-left:0; }
+  .dash-label{ font-size: 10px; color:#8A8390; letter-spacing:0.08em; margin-bottom: 6px; }
+  .dash-num{ font-family:'Shippori Mincho',serif; font-weight:700; font-size: 30px; line-height:1; }
+  .dash-num small{ font-size: 13px; font-weight:500; margin-left:2px; color:#7A7480; }
+  .dash-num.accent{ color:#B08A6C; }
+  .dash-ring-wrap{ display:flex; align-items:center; gap:12px; }
+  .dash-ring{ width:46px; height:46px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .dash-ring-inner{ width:32px; height:32px; border-radius:50%; background:#F5F1EC; }
+  .dash-streak-dots{ display:flex; gap:4px; margin-top:8px; }
+  .dash-dot{ width:12px; height:12px; border-radius:3px; background:#E4DED2; }
+  .dash-dot.on{ background:#2E2B33; }
+
+  .quick-links{ display:flex; gap:10px; margin-bottom: 30px; }
+  .resume-card{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:#F4F2FB; border-radius: 14px; padding: 16px 18px;
+    margin-bottom: 22px;
+  }
+  .resume-label{ font-size:10.5px; font-weight:700; color:#8B7FD9; letter-spacing:0.05em; margin-bottom:4px; }
+  .resume-title{ font-family:'Shippori Mincho',serif; font-size:14px; font-weight:700; }
+  .resume-btns{ display:flex; gap:8px; flex-shrink:0; }
+  .resume-btn{ font-size:11.5px; font-weight:700; padding:9px 14px; border-radius:999px; cursor:pointer; }
+  .resume-btn.resume-go{ background:#2E2B33; color:#fff; border:none; }
+  .resume-btn.resume-discard{ background:none; border:1px solid #C7C0D0; color:#8A8390; }
+  .quick-link{
+    position:relative;
+    flex:1; display:flex; align-items:center; gap:12px;
+    border:1px solid #DCD5C9; border-radius: 14px; padding: 14px 14px;
+    cursor:pointer; background:#fff;
+  }
+  .quick-link::before{
+    content:''; position:absolute; top:-6px; right:18px;
+    width:13px; height:13px; border-radius:50%;
+    box-shadow: 0 1px 3px rgba(46,43,51,0.2), inset 0 0 0 1px rgba(255,255,255,0.5);
+  }
+  .quick-link.new::before{ background: radial-gradient(circle at 35% 30%, #DCD3F2, #8B7FD9 75%); }
+  .quick-link.review::before{ background: radial-gradient(circle at 35% 30%, #F6D9E2, #E993A9 75%); }
+  .quick-link-badge{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 2px 5px rgba(46,43,51,0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
+  }
+  .quick-link-badge svg{ width:16px; height:16px; }
+  .quick-link.new .quick-link-badge{ background: radial-gradient(circle at 35% 30%, #C9BFE8, #8B7FD9 75%); }
+  .quick-link.review .quick-link-badge{ background: radial-gradient(circle at 35% 30%, #F0C3D0, #E993A9 75%); }
+  .quick-link-num{ font-family:'Shippori Mincho',serif; font-weight:700; font-size:18px; margin-bottom:2px; }
+  .quick-link-label{ font-size:10.5px; color:#8A8390; }
+  .quick-link.muted{ opacity:.5; cursor:default; }
+
+  .feature{ margin-bottom: 34px; }
+  .feature-eyebrow{ font-size:10.5px; font-weight:700; letter-spacing:0.2em; color:#B08A6C; margin-bottom: 8px; }
+  .feature-title{ font-family:'Shippori Mincho',serif; font-size:19px; font-weight:700; line-height:1.6; margin-bottom:10px; }
+  .feature-desc{ font-size:12.5px; color:#5C5764; line-height:1.9; margin-bottom: 18px; }
+  .feature-btns{ display:flex; gap: 10px; }
+
+  .sec-label{ display:flex; justify-content:space-between; align-items:baseline; font-family:'Shippori Mincho',serif; font-size: 14px; font-weight:700; margin-bottom: 4px; }
+  .sec-label span{ font-family:'Zen Kaku Gothic New',sans-serif; font-weight:400; font-size:10.5px; color:#B0A99C; }
+  .index-row{ display:flex; align-items:center; gap: 16px; padding: 15px 0; border-top: 1px solid #DCD5C9; cursor:pointer; }
+  .index-row:last-child{ border-bottom: 1px solid #DCD5C9; }
+  .index-num{ font-family:'Shippori Mincho',serif; font-size:12px; color:#B08A6C; width:18px; }
+  .index-block{ width: 13px; height:13px; border-radius:3px; flex-shrink:0; }
+  .index-name{ font-size:13px; font-weight:700; flex:1; }
+  .index-track{ width:56px; height:4px; border-radius:999px; background:#E4DED2; overflow:hidden; }
+  .index-fill{ height:100%; }
+  .index-pct{ font-family:'Shippori Mincho',serif; font-size:12.5px; color:#7A7480; width:32px; text-align:right; }
+  .index-arrow{ font-size:12px; color:#B0A99C; }
+  .see-all{ text-align:center; padding: 16px 0 4px; font-size:12px; font-weight:700; color:#B08A6C; cursor:pointer; text-decoration:underline; text-underline-offset:4px; }
+
+  .qtop{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 6px; }
+  .qtop-back{ font-size:11.5px; color:#8A8390; background:none; border:none; cursor:pointer; padding:0; }
+  .qtop-progress{ font-family:'Shippori Mincho',serif; font-size:12.5px; color:#7A7480; }
+  .qbar-track{ height:2px; background:#DCD5C9; margin-bottom: 26px; }
+  .qbar-fill{ height:100%; background:#2E2B33; width:20%; transition: width .4s ease; }
+  .q-tag-row{ display:flex; align-items:center; gap:10px; margin-bottom: 12px; }
+  .q-tag{ font-size: 10.5px; font-weight:700; letter-spacing:0.2em; color:#B08A6C; }
+  .q-weak-badge{ font-size:10px; font-weight:700; color:#fff; background:#B85C6B; padding:3px 9px; border-radius:999px; letter-spacing:0.05em; }
+  .q-mode-badge{ font-size:10px; font-weight:700; color:#7A7480; background:#E4DED2; padding:3px 9px; border-radius:999px; letter-spacing:0.05em; }
+  .q-text{ font-family:'BIZ UDPGothic',sans-serif; font-size: 15.5px; line-height:1.95; font-weight:700; margin-bottom: 28px; white-space:pre-wrap; }
+
+  .choices{ display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
+  .choice{ display:flex; align-items:center; gap:14px; background:#fff; border: 1px solid #E3DCCF; border-radius: 12px; padding: 14px 16px; cursor:pointer; font-size:13.5px; line-height:1.6; box-shadow: 0 3px 10px rgba(46,43,51,0.04); }
+  .choice-mark{ width:24px; height:24px; border-radius:50%; flex-shrink:0; background:#F0EBE0; color:#8A8390; display:flex; align-items:center; justify-content:center; font-size: 11.5px; font-weight:700; }
+  .choice.correct{ border-color:#8FBFA3; background:#EFF6F1; }
+  .choice.correct .choice-mark{ background:#3E7A5C; color:#fff; }
+  .choice.wrong{ border-color:#D9AAB2; background:#FAEEF0; }
+  .choice.wrong .choice-mark{ background:#B85C6B; color:#fff; }
+  .choice.dim{ opacity:.5; }
+
+  .feedback{ display:none; border-top: 2px solid #2E2B33; padding-top: 18px; margin-bottom: 20px; }
+  .feedback.show{ display:block; }
+  .feedback-head{ font-family:'Shippori Mincho',serif; font-weight:700; font-size: 18px; margin-bottom: 16px; }
+  .feedback-head.is-wrong{ color:#B85C6B; }
+  .feedback-head.is-correct{ color:#3E7A5C; }
+  .fb-block{ margin-bottom: 14px; }
+  .fb-block-title{ font-size: 13px; font-weight:700; letter-spacing:0.06em; color:#B08A6C; margin-bottom:6px; }
+  .fb-block-body{ font-family:'BIZ UDPGothic',sans-serif; font-size: 13px; line-height:1.9; color:#4B4653; }
+  .fb-term{ background:#fff; border:1px solid #E3DCCF; border-radius:10px; padding:10px 12px; font-family:'BIZ UDPGothic',sans-serif; font-size:12.5px; line-height:1.8; margin-top:4px; }
+  .fb-mastered{ display:none; margin-top:14px; padding: 10px 12px; background:#F4F2FB; border-radius:10px; font-size:12px; color:#6B5FA0; font-weight:700; }
+  .fb-mastered.show{ display:block; }
+
+  .result-frame{ padding-top: 60px; text-align:center; }
+  .result-kicker{ font-size:10.5px; font-weight:700; letter-spacing:0.22em; color:#B08A6C; margin-bottom: 18px; }
+  .result-score{ font-family:'Shippori Mincho',serif; font-size: 60px; font-weight:700; line-height:1; margin-bottom:10px; }
+  .result-score small{ font-size: 22px; color:#8A8390; font-weight:500; }
+  .result-msg{ font-family:'Shippori Mincho',serif; font-size: 16px; font-weight:700; margin-bottom: 10px; }
+  .result-sub{ font-size: 12.5px; color:#7A7480; line-height:1.9; margin-bottom: 40px; }
+  .result-dash{ display:flex; border-top:1px solid #2E2B33; border-bottom:1px solid #DCD5C9; padding: 20px 0; margin-bottom: 40px; text-align:left; }
+  .result-dash .dash-item{ flex:1; padding:0 16px; }
+  .result-dash .dash-item:first-child{ padding-left:0; }
+
+  .all-cat-title{ font-family:'Shippori Mincho',serif; font-size:19px; font-weight:700; margin-bottom: 24px; }
+
+  .detail-head{ display:flex; align-items:center; gap:12px; margin-bottom: 26px; }
+  .detail-chip{ width:22px; height:22px; border-radius:6px; flex-shrink:0; }
+  .detail-name{ font-family:'Shippori Mincho',serif; font-size:20px; font-weight:700; }
+  .detail-dash{ display:flex; border-top:1px solid #2E2B33; border-bottom:1px solid #DCD5C9; padding:20px 0; margin-bottom: 20px; }
+  .detail-dash .dash-item{ flex:1; padding:0 16px; }
+  .detail-dash .dash-item:first-child{ padding-left:0; }
+  .detail-desc{ font-family:'BIZ UDPGothic',sans-serif; font-size:13px; line-height:1.95; color:#5C5764; margin-bottom: 22px; }
+  .detail-empty{ font-family:'BIZ UDPGothic',sans-serif; font-size:12.5px; color:#B0A99C; line-height:1.9; margin-bottom: 22px; padding: 16px 0; border-top:1px dashed #DCD5C9; border-bottom:1px dashed #DCD5C9; text-align:center; }
+  .detail-glossary-link{ text-align:center; font-size:12px; font-weight:700; color:#B08A6C; cursor:pointer; text-decoration:underline; text-underline-offset:4px; margin-top: 18px; }
+
+  /* ================= 用語集 ================= */
+  .glossary-title{ font-family:'Shippori Mincho',serif; font-size:19px; font-weight:700; margin-bottom: 6px; }
+  .glossary-sub{ font-size:11.5px; color:#8A8390; margin-bottom: 24px; }
+  .glossary-row{ padding: 16px 0; border-top: 1px solid #DCD5C9; }
+  .glossary-row:last-child{ border-bottom: 1px solid #DCD5C9; }
+  .glossary-cat{ display:flex; align-items:center; gap:8px; font-size:10px; color:#B0A99C; font-weight:700; letter-spacing:0.05em; margin-bottom:6px; }
+  .glossary-chip{ width:8px; height:8px; border-radius:2px; }
+  .glossary-term{ font-family:'Shippori Mincho',serif; font-size:14.5px; font-weight:700; margin-bottom:6px; }
+  .glossary-desc{ font-family:'BIZ UDPGothic',sans-serif; font-size:12.5px; line-height:1.85; color:#5C5764; }
+
+  /* ================= 模擬試験モード ================= */
+  .mock-card{
+    border: 1px solid #2E2B33; border-radius: 14px; padding: 20px 20px;
+    margin-bottom: 34px; position:relative;
+  }
+  .mock-card-eyebrow{ font-size:10.5px; font-weight:700; letter-spacing:0.2em; color:#B08A6C; margin-bottom: 8px; }
+  .mock-card-title{ font-family:'Shippori Mincho',serif; font-size:17px; font-weight:700; margin-bottom:8px; }
+  .mock-card-desc{ font-size:12px; color:#5C5764; line-height:1.8; margin-bottom:16px; }
+  .mock-card-meta{ display:flex; gap:16px; margin-bottom:16px; }
+  .mock-card-meta div{ font-size:11px; color:#8A8390; }
+  .mock-card-meta b{ font-family:'Shippori Mincho',serif; font-size:15px; color:#2E2B33; display:block; }
+
+  .mock-intro-frame{ padding-top: 10px; }
+  .mock-intro-title{ font-family:'Shippori Mincho',serif; font-size:20px; font-weight:700; margin-bottom:14px; }
+  .mock-intro-desc{ font-size:13px; color:#5C5764; line-height:2; margin-bottom: 24px; }
+  .mock-intro-rules{ border-top:1px solid #2E2B33; border-bottom:1px solid #DCD5C9; padding: 18px 0; margin-bottom: 28px; }
+  .mock-intro-rule{ display:flex; justify-content:space-between; font-size:12.5px; padding: 8px 0; }
+  .mock-intro-rule b{ font-family:'Shippori Mincho',serif; font-weight:700; }
+
+  .mock-timer-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  .mock-timer{ font-family:'Shippori Mincho',serif; font-size:15px; font-weight:700; }
+  .mock-timer.low{ color:#B85C6B; }
+
+  .mock-choice.selected{ border-color:#2E2B33; background:#F0EBE0; }
+  .mock-choice.selected .choice-mark{ background:#2E2B33; color:#fff; }
+
+  .mock-score-hero{ text-align:center; padding-top: 50px; margin-bottom: 30px; }
+  .mock-score-num{ font-family:'Shippori Mincho',serif; font-size:56px; font-weight:700; line-height:1; }
+  .mock-score-num small{ font-size:20px; color:#8A8390; font-weight:500; }
+  .mock-score-sub{ font-size:12.5px; color:#7A7480; margin-top:10px; }
+
+  .mock-cat-breakdown{ margin-bottom: 30px; }
+  .mock-cat-row{ display:flex; align-items:center; gap:12px; padding:10px 0; border-top:1px solid #DCD5C9; font-size:12.5px; }
+  .mock-cat-row:last-child{ border-bottom:1px solid #DCD5C9; }
+  .mock-cat-chip{ width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+  .mock-cat-name{ flex:1; }
+  .mock-cat-score{ font-family:'Shippori Mincho',serif; color:#7A7480; }
+
+  .mock-review-item{ border-top:1px solid #DCD5C9; padding: 14px 0; }
+  .mock-review-item:last-child{ border-bottom:1px solid #DCD5C9; }
+  .mock-review-item summary{ cursor:pointer; font-size:12.5px; display:flex; align-items:center; gap:10px; list-style:none; }
+  .mock-review-item summary::-webkit-details-marker{ display:none; }
+  .mock-review-mark{ width:20px; height:20px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; }
+  .mock-review-mark.ok{ background:#3E7A5C; }
+  .mock-review-mark.ng{ background:#B85C6B; }
+  .mock-review-q{ font-family:'BIZ UDPGothic',sans-serif; flex:1; }
+  .mock-review-body{ font-family:'BIZ UDPGothic',sans-serif; font-size:12px; line-height:1.85; color:#5C5764; margin-top:12px; padding-left:30px; }
+  .mock-review-body div{ margin-bottom:6px; }
+
+  /* ================= 科目B：ケース問題 ================= */
+  .case-list-title{ font-family:'Shippori Mincho',serif; font-size:19px; font-weight:700; margin-bottom: 6px; }
+  .case-list-sub{ font-size:11.5px; color:#8A8390; margin-bottom: 24px; }
+  .case-card{ display:flex; align-items:center; gap:14px; padding: 16px 0; border-top:1px solid #DCD5C9; cursor:pointer; }
+  .case-card:last-child{ border-bottom:1px solid #DCD5C9; }
+  .case-card-chip{ width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+  .case-card-body{ flex:1; }
+  .case-card-cat{ font-size:10px; color:#B08A6C; font-weight:700; letter-spacing:0.05em; margin-bottom:4px; }
+  .case-card-title{ font-family:'Shippori Mincho',serif; font-size:14.5px; font-weight:700; }
+  .case-card-arrow{ font-size:14px; color:#B0A99C; }
+
+  .case-title{ font-family:'Shippori Mincho',serif; font-size:19px; font-weight:700; margin-bottom: 18px; }
+  .case-scenario{
+    font-family:'BIZ UDPGothic',sans-serif; font-size:13px; line-height:2;
+    background:#fff; border:1px solid #E3DCCF; border-radius:14px;
+    padding: 18px 18px; margin-bottom: 20px; white-space:pre-wrap;
+  }
+  .case-table{ margin-bottom: 26px; border-top:1px solid #2E2B33; }
+  .case-table-row{ display:flex; gap:14px; padding: 11px 0; border-bottom:1px solid #DCD5C9; font-size:12.5px; }
+  .case-table-role{ width:120px; flex-shrink:0; font-weight:700; }
+  .case-table-desc{ font-family:'BIZ UDPGothic',sans-serif; color:#5C5764; line-height:1.7; }
+
+  .case-sub-block{ margin-bottom: 30px; }
+  .case-sub-label{ font-size:10.5px; font-weight:700; letter-spacing:0.15em; color:#B08A6C; margin-bottom:10px; }
+  .case-sub-q{ font-family:'BIZ UDPGothic',sans-serif; font-size:14px; font-weight:700; line-height:1.9; margin-bottom: 14px; }
+  .case-sub-explain{ display:none; margin-top:12px; padding:14px 16px; border-radius:12px; font-family:'BIZ UDPGothic',sans-serif; font-size:12.5px; line-height:1.85; }
+  .case-sub-explain.show{ display:block; }
+  .case-sub-explain.is-correct{ background:#EFF6F1; color:#3E7A5C; }
+  .case-sub-explain.is-wrong{ background:#FAEEF0; color:#4B4653; }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <!-- ============ TOP ============ -->
+  <section class="screen active" id="screen-top">
+    <div class="kicker">DATA MANAGEMENT NOTES</div>
+    <div class="header-row">
+      <div class="headline">データのじかん</div>
+      <div class="header-date" id="top-date"></div>
+    </div>
+
+    <div class="dash">
+      <div class="dash-charm"></div>      <div class="dash-item">
+        <div class="dash-label">連続学習</div>
+        <div class="dash-num accent" id="top-streak">4<small>日</small></div>
+        <div class="dash-streak-dots" id="top-streak-dots"></div>
+      </div>
+      <div class="dash-item">
+        <div class="dash-label">全体の習得率</div>
+        <div class="dash-ring-wrap">
+          <div class="dash-ring" id="top-ring"><div class="dash-ring-inner"></div></div>
+          <div class="dash-num" style="font-size:22px;" id="top-ring-num">0<small>%</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="resume-card" id="resume-card" style="display:none;">
+      <div>
+        <div class="resume-label">前回の続きがあります</div>
+        <div class="resume-title" id="resume-title"></div>
+      </div>
+      <div class="resume-btns">
+        <button class="resume-btn resume-go" onclick="resumeSession()">再開する</button>
+        <button class="resume-btn resume-discard" onclick="discardSession()">破棄</button>
+      </div>
+    </div>
+
+    <div class="quick-links">
+      <div class="quick-link new" onclick="startNewQuiz()" id="new-link">
+        <div class="quick-link-badge">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div class="quick-link-num" id="new-count">0問</div>
+          <div class="quick-link-label">新規を学ぶ</div>
+        </div>
+      </div>
+      <div class="quick-link review" onclick="startReview()" id="review-link">
+        <div class="quick-link-badge">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 0 1 14-5.2M20 12a8 8 0 0 1-14 5.2M17 4v3.2H13.8M7 20v-3.2h3.2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="quick-link-num" id="review-count">0問</div>
+          <div class="quick-link-label">復習する</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-eyebrow">TODAY'S PICK</div>
+      <div class="feature-title">データガバナンス、いってみましょう</div>
+      <div class="feature-desc">まずは気軽な5問セットから。</div>
+      <div class="feature-btns">
+        <button class="btn btn-solid" onclick="startNewForCategory('governance',5)">新しい問題を解く</button>
+        <button class="btn btn-outline" onclick="startNewForCategory('governance',1)">1問だけ</button>
+      </div>
+    </div>
+
+    <div class="sec-label">分野別の習得率 <span>主要5分野</span></div>
+    <div id="index-list"></div>
+    <div class="see-all-row" style="display:flex; gap:20px; justify-content:center; padding-top:12px;">
+      <div class="see-all" style="padding:0;" onclick="showAllCategories()">全11分野を見る →</div>
+      <div class="see-all" style="padding:0;" onclick="showGlossary('top')">用語集を見る →</div>
+    </div>
+
+    <div class="mock-card" style="margin-top:34px;">
+      <div class="mock-card-eyebrow">MOCK EXAM</div>
+      <div class="mock-card-title">模擬試験に挑戦する</div>
+      <div class="mock-card-desc">全11分野からバランスよく出題。本番同様、最後にまとめて採点します。</div>
+      <div class="mock-card-meta">
+        <div><b>30問</b>出題数</div>
+        <div><b>60分</b>制限時間</div>
+        <div><b>11分野</b>から出題</div>
+      </div>
+      <button class="btn btn-outline btn-full" id="mock-card-btn" onclick="showMockIntro()">模擬試験について見る</button>
+    </div>
+
+    <div class="mock-card">
+      <div class="mock-card-eyebrow">CASE STUDY（科目B形式）</div>
+      <div class="mock-card-title">ケース問題に挑戦する</div>
+      <div class="mock-card-desc">実際の企業を想定した長文のシナリオから、複数の設問に答える形式です。四択とは違う「現場で考える力」を試せます。</div>
+      <button class="btn btn-outline btn-full" onclick="showCaseList()">ケース問題を見る</button>
+    </div>
+  </section>
+
+  <!-- ============ 11分野一覧 ============ -->
+  <section class="screen" id="screen-all-categories">
+    <button class="back-link" onclick="goTop()">← トップへ戻る</button>
+    <div class="all-cat-title">分野一覧</div>
+    <div id="all-index-list"></div>
+  </section>
+
+  <!-- ============ 分野詳細 ============ -->
+  <section class="screen" id="screen-category-detail">
+    <button class="back-link" onclick="backFromDetail()">← 戻る</button>
+    <div class="detail-head">
+      <div class="detail-chip" id="detail-chip"></div>
+      <div class="detail-name" id="detail-name"></div>
+    </div>
+    <div class="detail-dash">
+      <div class="dash-item">
+        <div class="dash-label">この分野の習得率</div>
+        <div class="dash-num" id="detail-pct" style="font-size:26px;">-<small>%</small></div>
+      </div>
+      <div class="dash-item">
+        <div class="dash-label">出題数</div>
+        <div class="dash-num" id="detail-count" style="font-size:26px;">-</div>
+      </div>
+    </div>
+    <div class="detail-desc" id="detail-desc"></div>
+    <div id="detail-action"></div>
+    <div class="detail-glossary-link" id="detail-glossary-link">この分野の用語を見る →</div>
+  </section>
+
+  <!-- ============ 用語集 ============ -->
+  <section class="screen" id="screen-glossary">
+    <button class="back-link" id="glossary-back" onclick="backFromGlossary()">← 戻る</button>
+    <div class="glossary-title">用語集</div>
+    <div class="glossary-sub" id="glossary-sub">やさしい言い換えでまとめています</div>
+    <div id="glossary-list"></div>
+  </section>
+
+  <!-- ============ 問題演習 ============ -->
+  <section class="screen" id="screen-question">
+    <div class="qtop">
+      <button class="qtop-back" onclick="pauseQuiz()">← 中断する</button>
+      <div class="qtop-progress" id="q-progress-text">01 / 05</div>
+    </div>
+    <div class="qbar-track"><div class="qbar-fill" id="q-progress-bar"></div></div>
+    <div class="q-tag-row">
+      <div class="q-tag" id="q-tag"></div>
+      <div class="q-mode-badge" id="q-mode-badge"></div>
+      <div class="q-weak-badge" id="q-weak-badge" style="display:none;">苦手</div>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="choices" id="q-choices"></div>
+
+    <div class="feedback" id="q-feedback">
+      <div class="feedback-head" id="fb-head"></div>
+      <div class="fb-block"><div class="fb-block-title">なぜこれが正解？</div><div class="fb-block-body" id="fb-correct"></div></div>
+      <div class="fb-block"><div class="fb-block-title">まぎらわしい選択肢について</div><div class="fb-block-body" id="fb-wrong"></div></div>
+      <div class="fb-block"><div class="fb-block-title">実務ではこう使う</div><div class="fb-block-body" id="fb-practice"></div></div>
+      <div class="fb-block" id="fb-term-wrap" style="display:none;">
+        <div class="fb-block-title">やさしい用語メモ</div>
+        <div class="fb-term" id="fb-term"></div>
+      </div>
+      <div class="fb-mastered" id="fb-mastered">🌟 この問題は3回連続正解！しばらく復習に出てきません</div>
+      <div class="fb-mastered" id="fb-weak-set" style="background:#FAEEF0; color:#B85C6B;">📌 復習でも間違えたので「苦手」に登録しました。優先的に復習に出します</div>
+      <div class="fb-mastered" id="fb-weak-cleared" style="background:#EFF6F1; color:#3E7A5C;">🎉 苦手を克服しました！</div>
+    </div>
+
+    <button class="btn btn-solid btn-full" id="q-next-btn" style="display:none;" onclick="nextQuestion()">つぎへ</button>
+  </section>
+
+  <!-- ============ 結果 ============ -->
+  <section class="screen" id="screen-result">
+    <div class="result-frame">
+      <div class="result-kicker">RESULT</div>
+      <div class="result-score" id="result-score">5<small>/5</small></div>
+      <div class="result-msg" id="result-msg">お見事です</div>
+      <div class="result-sub" id="result-sub">この調子で、また明日も少しずつ進めましょう</div>
+    </div>
+    <div class="result-dash">
+      <div class="dash-item">
+        <div class="dash-label">全体の習得率</div>
+        <div class="dash-num accent" id="result-ring-num">0<small>%</small></div>
+      </div>
+      <div class="dash-item">
+        <div class="dash-label">新規</div>
+        <div class="dash-num" style="font-size:22px;" id="result-new-count">0問</div>
+      </div>
+      <div class="dash-item">
+        <div class="dash-label">復習待ち</div>
+        <div class="dash-num" style="font-size:22px;" id="result-review-count">0問</div>
+      </div>
+    </div>
+    <button class="btn btn-solid btn-full" onclick="goTop()">トップへ戻る</button>
+  </section>
+
+  <!-- ============ 模擬試験：説明 ============ -->
+  <section class="screen" id="screen-mock-intro">
+    <button class="back-link" onclick="goTop()">← トップへ戻る</button>
+    <div class="mock-intro-frame">
+      <div class="kicker">MOCK EXAM</div>
+      <div class="mock-intro-title">模擬試験</div>
+      <div class="mock-intro-desc">全11分野から重要度に応じてバランスよく出題します。本番のデータマネジメント試験（科目A）の形式を意識して、途中の正誤は表示せず、最後にまとめて採点・解説します。</div>
+      <div class="mock-intro-rules">
+        <div class="mock-intro-rule"><span>出題数</span><b>30問</b></div>
+        <div class="mock-intro-rule"><span>制限時間</span><b>60分</b></div>
+        <div class="mock-intro-rule"><span>採点</span><b>すべて解答後にまとめて表示</b></div>
+        <div class="mock-intro-rule"><span>中断</span><b>「中断する」から再開できます</b></div>
+      </div>
+      <button class="btn btn-solid btn-full" onclick="startMockExam()">模擬試験を始める</button>
+    </div>
+  </section>
+
+  <!-- ============ 模擬試験：出題 ============ -->
+  <section class="screen" id="screen-mock-question">
+    <div class="qtop">
+      <button class="qtop-back" onclick="pauseMockExam()">← 中断する</button>
+      <div class="qtop-progress" id="mock-progress-text">01 / 30</div>
+    </div>
+    <div class="mock-timer-row">
+      <div class="mock-timer" id="mock-timer">60:00</div>
+      <div style="font-size:10.5px; color:#8A8390;">残り時間</div>
+    </div>
+    <div class="qbar-track"><div class="qbar-fill" id="mock-progress-bar"></div></div>
+    <div class="q-tag" id="mock-tag" style="margin-bottom:12px;"></div>
+    <div class="q-text" id="mock-text"></div>
+    <div class="choices" id="mock-choices"></div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-outline" onclick="mockPrev()" id="mock-prev-btn" style="flex:1;">← 前へ</button>
+      <button class="btn btn-solid" onclick="mockNext()" id="mock-next-btn" style="flex:2;">次へ</button>
+    </div>
+  </section>
+
+  <!-- ============ 模擬試験：結果 ============ -->
+  <section class="screen" id="screen-mock-result">
+    <div class="mock-score-hero">
+      <div class="result-kicker">MOCK EXAM RESULT</div>
+      <div class="mock-score-num" id="mock-score-num">0<small>/30</small></div>
+      <div class="mock-score-sub" id="mock-score-sub"></div>
+    </div>
+    <div class="mock-cat-breakdown" id="mock-cat-breakdown"></div>
+    <div style="display:flex; gap:10px; margin-bottom:30px;">
+      <button class="btn btn-outline btn-full" onclick="addMockWrongToReview()" id="mock-add-review-btn">間違えた問題を復習に追加</button>
+    </div>
+    <div class="sec-label">解答一覧 <span id="mock-review-count-label"></span></div>
+    <div id="mock-review-list"></div>
+    <button class="btn btn-solid btn-full" onclick="goTop()" style="margin-top:24px;">トップへ戻る</button>
+  </section>
+
+  <!-- ============ 科目B：ケース一覧 ============ -->
+  <section class="screen" id="screen-case-list">
+    <button class="back-link" onclick="goTop()">← トップへ戻る</button>
+    <div class="case-list-title">ケース問題（科目B形式）</div>
+    <div class="case-list-sub">実際の企業を想定した長めのシナリオから、複数の設問に答えます</div>
+    <div id="case-list"></div>
+  </section>
+
+  <!-- ============ 科目B：ケース詳細 ============ -->
+  <section class="screen" id="screen-case">
+    <button class="back-link" onclick="showCaseList()">← ケース一覧へ戻る</button>
+    <div class="q-tag" id="case-tag" style="margin-bottom:10px;"></div>
+    <div class="case-title" id="case-title"></div>
+    <div class="case-scenario" id="case-scenario"></div>
+    <div class="case-table" id="case-table"></div>
+    <div id="case-subs"></div>
+    <button class="btn btn-solid btn-full" id="case-check-btn" onclick="checkCaseAnswers()">こたえを確認する</button>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   分野マスタ
+============================================================ */
+const CATEGORIES = [
+  { key:'governance',  name:'データガバナンス',         color:'#8B7FD9', desc:'データを会社全体でちゃんと管理するためのルール作りについて学びます。' },
+  { key:'quality',      name:'データ品質',               color:'#6FBE9C', desc:'表記ゆれや入力ミスなど、データの正しさ・使いやすさに関わるテーマです。' },
+  { key:'metadata',     name:'メタデータ管理',           color:'#E993A9', desc:'「これは何のデータ？」に答えるための説明情報の整備について扱います。' },
+  { key:'master',       name:'マスタ/参照データ',         color:'#E9B888', desc:'顧客名・商品名など、複数システムで共通して使う基本データの管理です。' },
+  { key:'security',     name:'データセキュリティ',         color:'#7FA8C9', desc:'見てよい人・使ってよい人を決める、アクセス制御まわりのテーマです。' },
+  { key:'architecture', name:'データアーキテクチャ',       color:'#C9A6D9', desc:'全社視点でのデータ設計や、部門を横断したデータの流れを扱います。' },
+  { key:'warehouse',    name:'データウェアハウジング&BI',  color:'#9FC3D9', desc:'データを集計・分析するための土台づくりについて学びます。' },
+  { key:'integration',  name:'データ統合&相互運用性',      color:'#D9B99F', desc:'複数のシステムやファイル間でのデータ連携・統合を扱います。' },
+  { key:'content',      name:'ドキュメント&コンテンツ管理', color:'#9FD9C3', desc:'ファイルや文書の管理ルール、探しやすさに関わるテーマです。' },
+  { key:'modeling',     name:'データモデリング&デザイン',   color:'#D99FA6', desc:'データの構造をどう設計するか、という少し技術寄りのテーマです。' },
+  { key:'storage',      name:'データストレージ&オペレーション', color:'#B0A99C', desc:'データの保存・運用に関する基本的な考え方を扱います。' },
+];
+
+/* ============================================================
+   問題データ（50問。各分野10問、id付き）
+============================================================ */
+const RAW_QUESTIONS = {
+governance: [
+ {question:'新しい顧客管理システムを導入することになり、「このデータ項目、そもそも何のために集めているんだっけ？」という議論が現場で止まりません。この状況で本来まず明確にすべき役割は？',choices:['システムの開発を担当するエンジニアの役割分担','そのデータの意味・利用目的に責任を持つ「データオーナー」が誰か','ヘルプデスクへの問い合わせ担当者','システムのサーバー管理を行うインフラ担当者'],answer:1,explain:{correct:'データの意味や「何のために集めるか」を最終的に判断する責任者が決まっていないと、現場での議論は堂々巡りになります。これを担うのがデータオーナーです。',wrong:'①③④はいずれもシステムの実装・運用側の役割で、「このデータは何のためのものか」というビジネス上の意味づけには直接関わりません。',practice:'実務では、部門ごとに主要なデータ項目のオーナーを明示し、意味や利用目的の判断はその人に一本化することで、こうした堂々巡りを防ぎます。',term:'データオーナー → そのデータの意味・利用目的・品質基準について最終的な責任を持つ人のこと。'}},
+ {question:'データオーナーは部長など役職者が務めることが多く、日々の細かいデータ品質チェックまでは手が回りません。この「日々の実務」を担う役割として適切なのは？',choices:['データオーナーがすべて自分でチェックする','日々の品質確認やルール運用を担う「データスチュワード」を置く','日々のチェックは特に誰も行わず、問題が起きたら対応する','外部のコンサルタントにすべて委託する'],answer:1,explain:{correct:'データオーナーが「何を守るか」の方針を決め、データスチュワードが日々の運用・品質管理を担う、という役割分担が実務的です。',wrong:'①はオーナーの負荷が現実的でなく機能しません。③は品質問題が積み重なってから対応することになり、表記ゆれなどの根本原因が放置されがちです。',practice:'実務では部門ごとにデータスチュワードを任命し、入力ルールの徹底や表記ゆれのチェックなど、現場に近い日常業務を任せる体制がよく取られます。',term:'データスチュワード → データオーナーが決めた方針のもと、日々のデータ品質やルール運用を実務的に担う役割のこと。'}},
+ {question:'各部署がバラバラにデータ活用の取り組みを始めており、同じような分析基盤を別々に作ってしまうなど非効率が目立ってきました。全社的にこの状況を調整する組織を置くとしたら、その主な目的は？',choices:['各部署のデータ活用を禁止し、1つの部署に業務を集約する','全社横断でルール・基盤・優先順位を調整し、重複や非効率を防ぐ','各部署の予算を管理し、コスト削減だけを目的に活動する','データに関する広報活動だけを行う'],answer:1,explain:{correct:'部署ごとの取り組みを否定するのではなく、全社的な整合性を調整する役割が、こうした推進組織の本来の目的です。',wrong:'①は現場の活用意欲を削いでしまい逆効果です。③④は役割の一部を切り取りすぎていて、組織の目的としては不十分です。',practice:'実務では「データマネジメント推進組織（DMO）」のような横断組織を置き、重複投資やルールの矛盾を防ぐ調整役を担わせます。',term:'DMO（データマネジメント推進組織） → 全社的なデータ活用のルールや基盤を横断的に調整する組織のこと。'}},
+ {question:'立派なデータ管理ポリシーを文書化して社内ポータルに公開しましたが、半年後に見てみると誰も守っておらず、状況はほとんど変わっていませんでした。この結果から学べる教訓として最も適切なものは？',choices:['ポリシーの文章をより詳しく、専門的に書き直せばよい','ポリシーを作るだけでなく、周知・教育・運用の仕組みまでセットで設計する必要がある','ポリシーは形式上必要なだけなので、守られなくても問題ない','公開する場所をポータルから紙の掲示物に変えればよい'],answer:1,explain:{correct:'ルールは「作ること」がゴールではなく「守られること」がゴールです。周知・教育・運用チェックの仕組みがなければ形骸化します。',wrong:'①④は伝え方の表面的な変更にすぎません。③は問題を放置する考え方です。',practice:'実務では、研修・定期的な遵守状況チェック・違反時のフォローアップまでを一体で設計することが定着のカギになります。',term:null}},
+ {question:'データガバナンスの担当者が現場にルール徹底を呼びかけていますが、「忙しいので後回し」という反応ばかりで、なかなか浸透しません。取り組みを前進させるために特に重要なことは？',choices:['担当者がさらに細かいマニュアルを作り、丁寧に説明を重ねる','経営層がデータガバナンスの重要性を明確に発信し、優先順位として位置づける','守らない部署の担当者個人に責任を負わせる','ルールをできるだけ簡素化し、実質的に有名無実化させる'],answer:1,explain:{correct:'現場レベルの働きかけだけでは優先順位争いに負けがちです。経営層が明確に位置づけることで現場の優先度が変わります。',wrong:'①は方法論の改善にとどまります。③は個人への責任転嫁で組織的な解決になりません。④は問題を先送りしているだけです。',practice:'実務では、経営層が目的やメリットを発信し、評価制度や予算配分に組み込むことで現場の納得感を高めます。',term:null}},
+ {question:'「データガバナンス」と「ITガバナンス」は名前が似ていて混同されがちです。両者の違いとして最も適切な説明は？',choices:['完全に同じものであり、呼び方が違うだけである','ITガバナンスはシステム・インフラの統制が中心、データガバナンスはデータの意味・品質・利用ルールが中心','データガバナンスはIT部門だけが担当し、他部署は関与しない','ITガバナンスは廃止され、データガバナンスに統合される予定である'],answer:1,explain:{correct:'ITガバナンスは主にシステムやインフラの統制を扱うのに対し、データガバナンスはデータの意味・品質・利用ルールなどビジネス的な側面を強く含みます。',wrong:'①は明確に誤りです。③はビジネス部門の関与という前提を否定しています。④はそのような事実はありません。',practice:'実務では、システムの安定運用はIT部門が、データの意味や品質基準はビジネス部門を含めた形で連携することが多いです。',term:null}},
+ {question:'あるデータに品質問題が見つかったとき、「誰が最終判断をするのか」「誰が実際に修正するのか」があいまいで、対応が後手に回ることがよくあります。これを防ぐために整備しておくとよいものは？',choices:['問題が起きるたびに、その都度話し合いで担当を決める','誰が実行し、誰が承認し、誰が報告を受けるかをあらかじめ定めた責任分担表','すべての判断をデータオーナー1人に集中させる','問題対応のルール化はせず、現場の裁量に任せる'],answer:1,explain:{correct:'問題発生時に毎回話し合うのでは対応が遅れます。あらかじめ責任分担を明文化しておくことで迅速な対応が可能になります。',wrong:'①は調整コストが大きく対応遅れに直結します。③は特定個人への過度な集中、④は責任の所在があいまいなままです。',practice:'実務では、役割ごとの責任を整理した責任分担表を用意し、問題発生時にすぐ参照できるようにします。',term:null}},
+ {question:'まだデータガバナンスの取り組みが何もない会社が、いきなり全社共通の厳密なルールとシステムを一斉導入しようとしています。この進め方についての適切な指摘は？',choices:['一気に完璧な仕組みを作るのが最も効率的なので、問題ない','現場の実態やデータ活用の成熟度に合わせて、段階的に取り組みを広げる方が現実的','全社一斉導入以外の方法は存在しない','ルールは一度決めたら、その後は一切見直す必要がない'],answer:1,explain:{correct:'組織の実態を無視した一斉導入は、現場の反発や形骸化を招きやすくなります。段階的に成熟させていく進め方が現実的です。',wrong:'①③は極端な考え方で組織ごとの事情を無視しています。④は実態との乖離リスクを見落としています。',practice:'実務では、重要度の高いデータ領域から着手し、成功体験を積みながら段階的に対象を広げていきます。',term:null}},
+ {question:'データガバナンスを強化しようと、あらゆるデータ変更に何段階もの承認プロセスを設けたところ、現場から「日々の業務が回らない」という不満が噴出しました。この状況への適切な考え方は？',choices:['不満が出るのは仕方ないので、そのままルールを維持する','データの重要度やリスクに応じて、承認プロセスの厳しさに強弱をつける','不満が出た時点で、ガバナンスの取り組み自体をすべて撤廃する','承認プロセスをさらに増やして、より厳格にする'],answer:1,explain:{correct:'すべてのデータに同じ厳しさを課すと形骸化を招きます。重要度・リスクに応じてメリハリをつけることが実効性につながります。',wrong:'①は現場の疲弊を放置し、③は必要なガバナンスまで失い、④は負荷をさらに悪化させます。',practice:'実務では、個人情報など機密性の高いデータには厳格な承認を、影響の小さいデータには簡易な確認のみを課します。',term:null}},
+ {question:'ある会社では、データは「業務のついでに発生する副産物」として扱われ、管理に予算をかける発想がありませんでした。データガバナンスの考え方に基づくと、この認識をどう見直すべきですか？',choices:['データは今のままコストのかからない副産物として扱い続けてよい','データを経営資源の一つ（データ資産）として捉え、適切な管理に投資する対象と位置づける','データ管理への投資は、大企業だけが行うべきものである','データの管理は情報システム部門だけが負担すればよいコストである'],answer:1,explain:{correct:'データガバナンスの根底には、データをヒト・モノ・カネと並ぶ経営資源として捉える考え方があります。',wrong:'①は前提と正反対です。③④は特定の対象や部門に限定しすぎています。',practice:'実務では、データ整備を「将来の意思決定やAI活用を支える投資」として説明し、予算確保につなげます。',term:'データ資産 → 企業が保有するデータを、ヒト・モノ・カネと並ぶ経営資源の一つとして捉える考え方のこと。'}}
+],
+quality: [
+ {question:'「データ品質」という言葉が指しているものとして、最も近いものはどれですか？',choices:['データを保存するサーバーの性能','データが正しく、使いやすく、信頼できる状態かどうか','データにかかっているセキュリティ対策の強さ','データベースの検索速度の速さ'],answer:1,difficulty:'easy',explain:{correct:'データ品質とは、データが正確・一貫・最新であるなど、信頼できる状態かどうかを指す言葉です。',wrong:'①はインフラ性能、③はセキュリティ、④は処理速度の話で、いずれも品質の観点とは別のテーマです。',practice:'実務では「重複がないか」「値が最新か」「表記が統一されているか」といった観点で品質をチェックします。',term:'データ品質 → データが正しく、使いやすく、信頼できる状態かどうかのこと。'}},
+ {question:'ある営業データベースを見ると、同じ商談が「A社案件」「A社_商談」のように微妙に違う名前で二重に登録されていました。この問題への対処として最も適切なものは？',choices:['システムのサーバーを増強し、処理速度を上げる','重複した案件を特定して統合し、今後同じ重複が起きないよう入力ルールを整える','アクセスできる担当者を減らし、入力できる人を限定する','サーバーのバックアップ頻度を上げる'],answer:1,explain:{correct:'表記ゆれによる重複登録は典型的なデータ品質の問題です。既存データの統合と、再発防止の入力ルール整備の両方が必要です。',wrong:'①④はインフラ面の対応で重複そのものは解決しません。③はアクセス制限であり原因（ルール不在）に直接効きません。',practice:'実務では、重複データを定期的に検出する仕組みと、入力時の候補表示を組み合わせて重複の発生自体を防ぎます。',term:null}},
+ {question:'ある部署でのデータ品質向上の取り組みとして、次のa〜cが検討されています。このうち「望ましくない」ものだけの組み合わせはどれですか。\na．入力時にプルダウンで選択肢を限定し、自由入力を減らす\nb．データ登録後のチェックは行わず、問題が起きたときだけ対応する\nc．品質チェックの結果を定期的に部署内で共有し、傾向を把握する',choices:['aのみ','bのみ','a, cのみ','a, b, cすべて'],answer:1,explain:{correct:'aは自由入力によるゆらぎを防ぐ有効な対策、cは継続的な改善につながる良い取り組みです。bは事後対応のみで予防ができておらず望ましくありません。',wrong:'aやcは実務でもよく使われる有効な品質向上策で、除外すべき対象ではありません。',practice:'実務では、入力段階での予防と、事後の定期チェック・共有をセットで行うことで品質問題を継続的に改善します。',term:null}},
+ {question:'データ品質を守るため、「すべてのデータ入力は情報システム部門が代行し、現場の担当者は一切入力しない」というルールを検討している会社があります。この方針についての適切な指摘は？',choices:['現場の入力ミスがなくなるので、最も優れた方法である','現場の業務知識が反映されにくくなり、かえって内容の誤りや対応の遅れを招くおそれがある','情報システム部門の負荷は変わらないので、特に問題はない','この方法以外にデータ品質を守る手段は存在しない'],answer:1,difficulty:'hard',explain:{correct:'入力作業を一部門に集中させると、現場の実態を知らない担当者が代行することになり、誤りや反映の遅れが起きやすくなります。',wrong:'①は別の問題（内容理解のズレ）を生みます。③は負荷が明らかに集中し増大します。④は他の手段を無視した極端な言い切りです。',practice:'実務では、入力自体は現場が行いつつ、ルール・チェック機能・教育で精度を担保する形が現実的です。',term:null}},
+ {question:'「名寄せ」という言葉が指す作業として、最も近いものはどれですか？',choices:['同じ実体（人や会社など）を表す複数のデータをまとめること','データを名前順に並び替えること','データにパスワードを設定すること','データを別のシステムに移行すること'],answer:0,difficulty:'easy',explain:{correct:'名寄せとは、表記ゆれなどで別々に登録された同一の実体を、同じものとして統合する作業のことです。',wrong:'②は並び替え、③はセキュリティ設定、④はシステム移行の話で、いずれも統合という意味とは異なります。',practice:'実務では、名前・電話番号・メールアドレスなど複数の項目を組み合わせて同一性を判定し、名寄せを行います。',term:'名寄せ → 表記ゆれなどで別々に登録された同一の実体（人や会社など）のデータを、まとめて統合すること。'}},
+ {question:'ある売上データを分析したところ、3か月前に退店した店舗のデータがいまだに「営業中」として登録されたままでした。この状態を表すデータ品質の観点として最も近いものは？',choices:['セキュリティ上のリスクが高い状態','データの最新性（鮮度）が保たれていない状態','データの保存容量が不足している状態','データベースの応答速度が遅い状態'],answer:1,explain:{correct:'実態と情報が食い違っている＝情報が更新されていない状態は、データ品質の中でも「最新性（鮮度）」の問題です。',wrong:'①③④はセキュリティや性能・容量の話で、今回の状況とは論点が異なります。',practice:'実務では、閉店・組織変更などのイベント発生時に、関連するデータを確実に更新する仕組みを整えます。',term:null}},
+ {question:'新しく入社した担当者向けに、次のa〜cのアドバイスが用意されました。このうち「データ品質の観点で問題がある」ものだけの組み合わせは？\na．迷ったら、とりあえず似た項目に自由入力で書いておく\nb．入力ルールに不明点があれば、都度データオーナーやスチュワードに確認する\nc．過去の入力例を参考にしながら、統一されたフォーマットで入力する',choices:['aのみ','bのみ','cのみ','a, cのみ'],answer:0,explain:{correct:'aの「迷ったらとりあえず自由入力」は表記ゆれや誤った情報の温床になりやすく問題があります。bとcはむしろ望ましい行動です。',wrong:'bは不明点を確認する良い姿勢、cは既存ルールに合わせる良い姿勢です。良い行動まで一緒に選んでしまうのが典型的な誤りです。',practice:'実務では「迷ったら自己判断せず確認する」という文化を作ることが品質のばらつきを防ぐ土台になります。',term:null}},
+ {question:'あるチームが「データ品質を絶対に落とさないために、1件でも入力ミスがあれば即座にシステムが登録を拒否する」という厳格すぎるチェックを導入したところ、現場から「正常なデータまで頻繁に弾かれて仕事が進まない」という声が上がりました。この状況への適切な考え方は？',choices:['品質のためなら現場の負担は無視してよいので、そのまま維持する','チェックの厳しさとリスクのバランスを見直し、重大な誤りと軽微な表記ゆれを区別する','このチェック機能自体を完全に撤廃し、何もチェックしないようにする','チェックにかかる時間を計測し、担当者ごとに競わせる'],answer:1,difficulty:'hard',explain:{correct:'過剰に厳格すぎると現場の業務が回らなくなり、かえって非公式な回避策を生みかねません。誤りの重大さに応じたメリハリが現実的です。',wrong:'①は現場の疲弊を軽視、③は必要性自体を放棄、④は本質と無関係です。',practice:'実務では、致命的な誤りは厳格に、軽微な表記ゆれは警告にとどめるなど強弱を設計します。',term:null}},
+ {question:'ある顧客データベースで、電話番号の欄に「090-1234-5678」「09012345678」「090.1234.5678」のように、形式がバラバラに入力されていました。この状態を防ぐための対策として最も直接的なものは？',choices:['データベースのサーバーをより高性能なものに交換する','入力時に電話番号の形式をあらかじめ指定し、システム側でチェックする','電話番号の項目自体を廃止する','アクセス権限を持つ人数を減らす'],answer:1,explain:{correct:'形式のバラつきは、入力時にフォーマットを指定しシステム側で自動チェックすることで直接的に防げます。',wrong:'①は性能の話で無関係、③は必要な情報自体を失い、④はアクセス制限で入力形式とは別の話です。',practice:'実務では、入力欄にフォーマット例を表示したり、ハイフンの有無を自動的に統一したりして表記の一貫性を保ちます。',term:null}},
+ {question:'「データクレンジング」という言葉が指す作業として、最も近いものはどれですか？',choices:['表記ゆれや入力ミスを直して、データを使いやすく整えること','データを暗号化して保護すること','データを別の部署に共有すること','データの利用権限を設定すること'],answer:0,difficulty:'easy',explain:{correct:'データクレンジングとは、表記ゆれや誤入力、重複などを修正し、データを使いやすく整える作業のことです。',wrong:'②はセキュリティ対策、③はデータ共有、④はアクセス権限設定の話です。',practice:'実務では、定期的にデータクレンジングを実施し、表記の統一や重複の解消、欠損値の補完などを行います。',term:'データクレンジング → 表記ゆれや入力ミスを直して、データを使いやすく整えること。'}}
+],
+metadata: [
+ {question:'「メタデータ」という言葉が指しているものとして、最も近いものはどれですか？',choices:['データそのものの数値や文字の内容','データについて説明する情報（作成者・作成日・意味など）','データを保存するハードディスクの容量','データを暗号化するためのパスワード'],answer:1,difficulty:'easy',explain:{correct:'メタデータとは、データそのものではなく「そのデータが何であるか」を説明する情報のことです。',wrong:'①はデータの中身そのもの、③④はインフラやセキュリティの話です。',practice:'実務では、Excelファイルのプロパティ情報や、データベースの項目定義書などが身近な例です。',term:'メタデータ → データについて説明するデータのこと。書類につけるラベルのようなもの。'}},
+ {question:'ある分析担当者が「この売上データの“売上”という項目、税込なのか税抜きなのか分からない」と困っています。この問題を解決するために特に必要なものは？',choices:['データを保存するサーバーの増強','項目の意味や算出方法を記録した「ビジネスメタデータ」の整備','アクセス権限の見直し','データベースのバックアップ頻度の増加'],answer:1,explain:{correct:'項目の意味・定義に関する情報はビジネスメタデータの典型例です。これがないと解釈のズレが生まれます。',wrong:'①④はインフラ運用の話、③はアクセス制御の話で、意味の曖昧さの解決にはなりません。',practice:'実務では、主要な指標について定義書やビジネスグロッサリーを整備し、前提条件を明記しておきます。',term:'ビジネスメタデータ → データ項目の意味・定義・利用ルールなど、ビジネス的な観点から説明する情報のこと。'}},
+ {question:'メタデータ整備の進め方として、次のa〜cが検討されています。このうち「望ましい」ものだけの組み合わせはどれですか。\na．重要なデータ項目から優先的に定義を整備する\nb．一度定義した内容は、その後絶対に変更しない\nc．定義した内容を、関係者が参照しやすい場所にまとめておく',choices:['a, cのみ','bのみ','a, b, cすべて','cのみ'],answer:0,explain:{correct:'aの優先度をつけた進め方とcの参照しやすさの確保は有効です。bのように絶対に変更しない硬直的な運用は現実的ではありません。',wrong:'bは一見きちんとしているようで、業務変化に対応できない硬直運用になりがちです。',practice:'実務では、定義は更新される前提で管理し、変更履歴を残しながら常に最新の定義を参照できる状態を保ちます。',term:null}},
+ {question:'ある会社が「社内のすべてのデータ項目について、1つ残らず詳細なメタデータを最初から完璧に整備してから使い始める」という方針を掲げています。この進め方についての適切な指摘は？',choices:['完璧を目指すことは常に正しいので、この方針で問題ない','全項目を一度に完璧に整備しようとすると膨大な時間がかかり、実際の活用が進まなくなるおそれがある','メタデータは一度整備すれば、その後は一切見直す必要がない','メタデータの整備には特に優先順位をつける必要はない'],answer:1,difficulty:'hard',explain:{correct:'すべてを最初から完璧に整備しようとすると着手までに膨大な時間がかかり、活用がいつまでも始まりません。優先度をつけた段階整備が現実的です。',wrong:'①は理想論でコストとスピードのバランスを無視、③は更新前提と矛盾、④は優先順位づけの重要性を否定しています。',practice:'実務では、利用頻度の高いデータや重要指標から優先して整備し、徐々に対象を広げていきます。',term:null}},
+ {question:'「データカタログ」という言葉が指すものとして、最も近いものはどれですか？',choices:['社内にあるデータの種類・場所・意味などを一覧できるようにした仕組み','データを販売するためのカタログ冊子','データベースのバックアップファイル','データを暗号化するためのソフトウェア'],answer:0,difficulty:'easy',explain:{correct:'データカタログとは、社内のデータがどこに、どういう意味で存在するのかを一覧・検索できるようにした仕組みです。',wrong:'②は販売用冊子、③はバックアップ、④は暗号化ソフトの話です。',practice:'実務では、データカタログを整備することで「このデータはどこにある？」という問い合わせの手間を減らせます。',term:'データカタログ → 社内にあるデータの種類・場所・意味などを一覧・検索できるようにした仕組みのこと。'}},
+ {question:'あるデータ分析基盤を導入したものの、どのテーブルがどのシステムから来ていて、どう加工されているのかが分からず、障害が起きたときに原因調査に時間がかかっています。この課題に対応するために整備すべきものは？',choices:['サーバーのCPU性能を強化する','データの出所や加工過程を記録した「データリネージ」の情報','ユーザーごとのログインパスワードの強化','データベースのディスク容量の増設'],answer:1,explain:{correct:'データの流れを追える情報がデータリネージです。整備されていると障害発生時の原因調査や影響範囲の特定がスムーズになります。',wrong:'①④はインフラ性能の話、③はパスワード強度の話で、原因調査のしやすさとは論点が異なります。',practice:'実務では、データ連携基盤にリネージを可視化する機能を組み込み、障害時の影響範囲をすぐ把握できるようにします。',term:'データリネージ → データがどこから来て、どう加工され、どこで使われたかの流れのこと。'}},
+ {question:'ビジネスグロッサリー（用語集）を整備する進め方として、次のa〜cが検討されています。「望ましくない」ものだけの組み合わせはどれですか。\na．情報システム部門だけで用語の定義をすべて決める\nb．用語ごとに、業務でよく使う部門の意見を取り入れて定義する\nc．定義した用語集を、関係者がいつでも参照できるようにする',choices:['aのみ','bのみ','cのみ','b, cのみ'],answer:0,explain:{correct:'業務用語の意味は実際にその業務を行う部門が最もよく理解しています。IT部門だけで完結させると現場の実態と合わない定義になりがちです。',wrong:'bのように業務部門を巻き込むこと、cのように参照しやすくすることは、用語集を機能させるために重要な取り組みです。',practice:'実務では、用語集の整備を各業務部門の代表者を交えたワークショップ形式で進めることがよくあります。',term:'ビジネスグロッサリー → 業務で使われる用語の意味・定義をまとめた用語集のこと。'}},
+ {question:'あるチームが「メタデータの管理はすべて情報システム部門に一任し、ビジネス部門は一切関与しない」という体制を取っています。この体制についての適切な指摘は？',choices:['IT部門が管理する方が正確なので、この体制がベストである','ビジネス的な意味づけが抜け落ち、現場で使われている言葉と実態が乖離するおそれがある','ビジネス部門はメタデータについて一切知る必要がない','この体制なら、今後メタデータの見直しは不要になる'],answer:1,difficulty:'hard',explain:{correct:'メタデータには技術的な情報だけでなく、業務上どういう意味を持つかというビジネス的な情報が含まれます。ビジネス部門の関与がないと現場の実態と乖離します。',wrong:'①は技術面の正確さと業務的妥当性を混同、③は関与の重要性を否定、④は更新される前提と矛盾しています。',practice:'実務では、技術的なメタデータ管理はIT部門が、ビジネスメタデータは業務部門が主導する役割分担がよく取られます。',term:null}},
+ {question:'ある担当者が「このファイル、匿名加工されているのか、個人情報がそのまま入っているのか分からないまま、分析に使ってしまった」と話しています。この事故を防ぐために、事前にファイルへ付与しておくべき情報は？',choices:['ファイルのアイコンのデザイン','データの取り扱い区分（匿名加工済みかどうかなど）を示すメタデータ','ファイルの保存形式（Excelかcsvかなど）','ファイルを開いた回数の記録'],answer:1,explain:{correct:'個人情報を含むかどうか、匿名加工済みかどうかといった取り扱い区分は、データを安全に扱うために不可欠なメタデータです。',wrong:'①③はファイルの見た目や形式の話で無関係、④は事後のログであり事前の防止情報としては不十分です。',practice:'実務では、フォルダ構成やデータカタログ上のタグとして「個人情報あり／匿名加工済み」などの区分を明示します。',term:'匿名加工情報 → 個人が分からないように加工した情報のこと。'}},
+ {question:'メタデータのうち、「データがいつ・どのシステムで作られ、どのサーバーに保存されているか」といった技術的な情報を指すものはどれですか？',choices:['ビジネスメタデータ','テクニカルメタデータ','オペレーショナルメタデータ','匿名加工情報'],answer:1,difficulty:'easy',explain:{correct:'データの形式・保存場所・作成システムなど技術的な観点の情報はテクニカルメタデータと呼ばれます。',wrong:'ビジネスメタデータは意味や利用ルール、オペレーショナルメタデータは処理履歴などの運用情報を指し、役割が異なります。',practice:'実務では、ビジネス/テクニカル/オペレーショナルの3種類を意識してメタデータを整理すると探しやすくなります。',term:null}}
+],
+master: [
+ {question:'「マスタデータ」という言葉が指しているものとして、最も近いものはどれですか？',choices:['顧客名・商品名・社員名など、複数の業務で共通して使う基本データ','その日限りで消えてしまう一時的なデータ','システムのエラーログの記録','サーバーの性能を測定するためのデータ'],answer:0,difficulty:'easy',explain:{correct:'マスタデータとは、顧客・商品・社員など、複数の業務システムで共通して参照される基本データのことです。',wrong:'②③④はいずれも一時的な記録やログ、測定データの話です。',practice:'実務では、営業システムと会計システムの両方で同じ顧客マスタを参照できるようにし、整合性を保ちます。',term:'マスタデータ → 顧客名、商品名、社員名など、いろいろな業務で共通して使う基本データのこと。'}},
+ {question:'ある会社では、同じ社員が人事システムでは「社員番号1001」、経費精算システムでは「社員番号E-1001」という別々のIDで管理されており、システム間の突き合わせに手間がかかっています。この課題に対する根本的な対応は？',choices:['システムのレスポンス速度を改善する','社員マスタを統一し、システム間で共通のIDを使えるようにする','経費精算システムの利用者を減らす','サーバーのセキュリティ設定を見直す'],answer:1,explain:{correct:'同じ実体が複数の異なるIDで管理されている状態は、マスタデータが統一されていないことが根本原因です。',wrong:'①④はインフラ・セキュリティの話で無関係、③は利用者を減らすだけで問題を回避しているにすぎません。',practice:'実務では「マスタデータ管理（MDM）」のもと、システム間で共有するID体系を統一します。',term:'マスタデータ管理（MDM） → 商品・顧客・社員など、複数システムで共有される基本データを一元的に管理する取り組みのこと。'}},
+ {question:'商品マスタの整備方針として、次のa〜cが検討されています。「望ましい」ものだけの組み合わせはどれですか。\na．新商品を登録する際は、既存の商品と重複していないか事前にチェックする\nb．似た商品名であれば、確認せずにそのまま新規登録してよい\nc．登録後、定期的に重複や不整合がないか棚卸しする',choices:['a, cのみ','bのみ','a, b, cすべて','aのみ'],answer:0,explain:{correct:'aの事前チェックとcの定期棚卸しは有効な取り組みです。bのように確認せず新規登録すると重複や表記ゆれの温床になります。',wrong:'bは効率的に見えて、長期的にはより大きな手間（重複整理）を生む原因になります。',practice:'実務では、商品登録の入力フローに重複チェックの手順を組み込み、後からの手戻りを防ぎます。',term:null}},
+ {question:'ある会社が「マスタデータの整合性を守るため、いかなる例外も認めず、全部門が寸分違わず同じ商品分類ルールに従う」という運用を徹底しようとしています。この方針についての適切な指摘は？',choices:['例外を一切認めないことは、常に品質向上につながるので問題ない','業態や部門ごとの実務上の違いを無視すると、かえって現場が独自運用に逃げてしまうリスクがある','マスタデータに部門ごとの違いという概念は存在しない','この方針を導入すれば、今後マスタデータの見直しは一切不要になる'],answer:1,difficulty:'hard',explain:{correct:'一律のルールを強制しすぎると、現場が非公式な独自運用に逃げてしまい、かえって統制が効かなくなることがあります。',wrong:'①は現場実態を無視するリスクを見落とし、③は差異考慮の余地を否定、④は変化への対応不能という問題を無視しています。',practice:'実務では、全社共通の基本項目は統一しつつ、業態特有の分類は拡張項目として許容するバランスを設計します。',term:null}},
+ {question:'「参照データ」という言葉が指すものとして、最も近いものはどれですか？',choices:['都道府県コードや通貨コードなど、業務全体で共通して参照される定型的な分類データ','その場限りで作られ、二度と使われないデータ','サーバーのアクセスログ','個人が作成したメモ書きのデータ'],answer:0,difficulty:'easy',explain:{correct:'参照データとは、都道府県コード・通貨コードなど、複数のシステムや業務で共通の物差しとして使われる定型的な分類データです。',wrong:'②③④はいずれも一時的・個別的なデータの話です。',practice:'実務では、参照データの内容を1か所で一元管理し、各システムがそこを参照する形でコード体系のズレを防ぎます。',term:'参照データ → 都道府県コードや通貨コードなど、業務全体で共通して使われる定型的な分類データのこと。'}},
+ {question:'ある会社の複数の支店システムで、それぞれ独自に「都道府県コード」を管理しており、あるシステムでは「13」が東京都、別のシステムでは「13」が神奈川県を意味していました。この状態が引き起こす主なリスクは？',choices:['サーバーの処理速度が遅くなる','システム間でデータを連携した際に、実際とは異なる都道府県として集計・分析されてしまう','ネットワークの通信費用が増加する','ユーザーのログインパスワードが漏えいする'],answer:1,explain:{correct:'同じコードが異なる意味で使われていると、連携時にデータの意味が入れ替わり、誤った集計・分析につながります。',wrong:'①③④はいずれも性能・費用・セキュリティの話で、コードの意味の食い違いとは異なります。',practice:'実務では、都道府県コードなどの参照データは業界標準や社内共通のコード表に統一します。',term:null}},
+ {question:'マスタデータ管理を担う体制として、次のa〜cが検討されています。「望ましい」ものだけの組み合わせはどれですか。\na．マスタデータの変更申請には、承認フローを設ける\nb．どの部署でも自由にマスタデータを直接書き換えられるようにする\nc．変更履歴を記録し、誰がいつ何を変更したか追跡できるようにする',choices:['a, cのみ','bのみ','a, b, cすべて','bのみを除いたすべて'],answer:0,explain:{correct:'aの承認フローとcの変更履歴管理は整合性と信頼性を保つために重要な仕組みです。bのように誰でも自由に書き換えられる状態は問題の原因になります。',wrong:'bは柔軟に見えますが、統制のない変更は信頼性そのものを損ないます。',practice:'実務では、マスタデータの変更は申請・承認のフローを経て反映し、履歴をログとして残します。',term:null}},
+ {question:'ある会社が「マスタデータの品質を守るため、いかなる状況でも変更申請の承認は最低3週間かける」という一律のルールを設けています。この運用についての適切な指摘は？',choices:['慎重であることは常に正しいので、この運用に問題はない','変更内容の重要度に関わらず一律に時間をかけると、緊急対応が必要な場面で業務に支障が出るおそれがある','マスタデータの変更に承認フローは一切不要である','この運用により、今後マスタデータの誤りは完全になくなる'],answer:1,difficulty:'hard',explain:{correct:'軽微な修正にまで一律で長い期間を課すと、緊急性の高い修正で業務が滞ります。重要度に応じた速さの調整が現実的です。',wrong:'①は業務影響を軽視、③は承認フロー自体の必要性を否定、④は人為的誤りをなくせるという誤った前提です。',practice:'実務では、影響範囲の大きい変更には慎重な承認を、軽微な修正には簡易な承認フローを用意します。',term:null}},
+ {question:'ある小売企業で、同じ取引先が「株式会社山田商店」「山田商店（株）」という2つの取引先コードで登録されており、与信管理上の取引総額が正しく把握できていませんでした。この問題を根本的に解決する方法は？',choices:['与信管理システムの画面デザインを見直す','取引先マスタを統一し、同一取引先には単一のコードのみを割り当てるルールを徹底する','取引先とのやり取りをすべて電話ではなくメールに変更する','与信管理システムのサーバーを別のデータセンターに移設する'],answer:1,explain:{correct:'同一の取引先が複数のコードで管理されていると、集計が実態より小さく分散します。マスタ統一と重複チェックが根本解決策です。',wrong:'①③④はいずれも画面デザインや連絡手段、インフラ配置の話で、コードの重複という根本原因とは無関係です。',practice:'実務では、法人番号などの公的識別子を活用して取引先マスタの重複を自動的に検出する仕組みを導入することもあります。',term:null}},
+ {question:'複数のシステムに散らばっているマスタデータを1つの基準に統合し、一元的に管理する取り組みを指す言葉として最も適切なものはどれですか？',choices:['データウェアハウジング','マスタデータ管理（MDM）','データセキュリティ','データウェアハウス'],answer:1,difficulty:'easy',explain:{correct:'複数システムに分散したマスタデータを統一基準で一元管理する取り組みはマスタデータ管理（MDM）と呼ばれます。',wrong:'データウェアハウジングは分析用データの集約・整理、データセキュリティはアクセス制御などの保護に関するテーマで、目的が異なります。',practice:'実務では、MDMツールを導入して顧客・商品などのマスタを一元管理することがあります。',term:null}}
+],
+security: [
+ {question:'「アクセス制御」という言葉が指しているものとして、最も近いものはどれですか？',choices:['データを見てよい人・使ってよい人を決めること','データの保存容量を管理すること','データの表記ゆれを直すこと','データの意味を説明する情報を整備すること'],answer:0,difficulty:'easy',explain:{correct:'アクセス制御とは、どのデータを誰が見てよいか、使ってよいかを決め、それに沿って利用を制限する仕組みのことです。',wrong:'②は容量管理、③はデータ品質、④はメタデータ整備の話です。',practice:'実務では、役職や部署に応じて閲覧・編集権限を細かく設定し、必要な人だけがアクセスできるようにします。',term:'アクセス制御 → 見てよい人・使ってよい人を決めること。'}},
+ {question:'ある会社で、部署異動になった社員のアカウントに、異動前の部署のデータへのアクセス権限がそのまま残っていました。この状態を防ぐために特に重要な仕組みは？',choices:['サーバーの処理速度を向上させる','異動・退職などのタイミングに合わせてアクセス権限を見直す仕組み','データの保存形式をすべて統一する','システムのデザインを刷新する'],answer:1,explain:{correct:'アクセス権限は、異動や退職といったライフサイクルの変化に合わせて見直されるべきものです。',wrong:'①③④はいずれも性能・形式・デザインの話で、権限の見直し不足という課題とは無関係です。',practice:'実務では、人事システムと連動して異動・退職のタイミングでアクセス権限を自動的に見直す仕組みを導入することがあります。',term:null}},
+ {question:'個人情報を含むデータの取り扱いとして、次のa〜cが検討されています。「望ましい」ものだけの組み合わせはどれですか。\na．業務に必要な範囲の担当者だけがアクセスできるよう権限を絞る\nb．利便性を優先し、社内の誰もが自由に閲覧できるようにする\nc．アクセスした記録（ログ）を残し、不審な利用がないか確認できるようにする',choices:['a, cのみ','bのみ','a, b, cすべて','aのみ'],answer:0,explain:{correct:'aの権限を絞る対応とcのログ管理は基本的な対策です。bのように誰でも自由に閲覧できる状態は明確に問題があります。',wrong:'bは利便性を優先しすぎており、漏えいリスクを大きく高めます。「必要な範囲」に絞ることが基本原則です。',practice:'実務では、個人情報を含むデータには特に厳格なアクセス権限とログ管理を設定し、定期的に利用状況を監査します。',term:null}},
+ {question:'ある会社が「セキュリティを徹底するため、いかなる業務であっても全社員のデータアクセスを一律で禁止し、必要な都度、情報システム部門に個別依頼する」という運用に変更しました。この方針についての適切な指摘は？',choices:['セキュリティのためなら、業務効率が落ちても問題はない','過度に厳格な制限は現場の業務を停滞させ、非公式な回避策（データの個人保存など）を誘発するおそれがある','このルールなら、情報漏えいのリスクは完全にゼロになる','アクセス制御は業務効率とは無関係なテーマである'],answer:1,difficulty:'hard',explain:{correct:'必要な業務利用まで一律で制限すると、現場が非公式な手段に頼るようになり、かえってリスクが高まることがあります。',wrong:'①は業務停滞を軽視、③は「一律禁止でリスクゼロ」という誤った前提、④は密接な関わりを無視しています。',practice:'実務では、役割に応じた適切な権限（ロールベースアクセス制御）を設計し、安全性と業務効率を両立させます。',term:null}},
+ {question:'「匿名加工情報」という言葉が指すものとして、最も近いものはどれですか？',choices:['個人が分からないように加工した情報','すべてのデータを暗号化した情報','社外に一切公開しない情報','システムのエラーメッセージ'],answer:0,difficulty:'easy',explain:{correct:'匿名加工情報とは、特定の個人を識別できないように加工した情報のことです。',wrong:'②の暗号化は読めなくする技術的処理で目的が異なり、③④は定義とは無関係です。',practice:'実務では、匿名加工情報を活用することで、個人情報保護の制約を受けにくい形でデータ分析やAI活用を進められる場合があります。',term:'匿名加工情報 → 個人が分からないように加工した情報のこと。'}},
+ {question:'ある社員が、業務で使う分析ツールに社内の顧客データをそのままアップロードしてよいか迷っています。この判断にあたって、まず確認すべきことは？',choices:['そのツールの画面デザインが使いやすいかどうか','そのデータに個人情報が含まれるか、外部ツールへの提供が社内ルール上許可されているか','そのツールの利用料金が予算内に収まるか','そのツールが日本語に対応しているかどうか'],answer:1,explain:{correct:'個人情報や機密情報を外部ツールにアップロードすることは漏えいリスクにつながります。まず社内ルール上の可否を確認する必要があります。',wrong:'①③④はツールの使い勝手や費用、言語対応の話で、安全性という本質的な論点とは異なります。',practice:'実務では、外部サービスへのデータ入力について、あらかじめ利用可否の基準やガイドラインを整備しておきます。',term:null}},
+ {question:'退職者のアカウント管理として、次のa〜cが検討されています。「望ましい」ものだけの組み合わせはどれですか。\na．退職日をもって、システムへのアクセス権限を速やかに無効化する\nb．退職後もしばらくはアカウントを有効なままにしておき、必要になったら止める\nc．退職前に、引き継ぎが必要なデータの所在を確認しておく',choices:['a, cのみ','bのみ','a, b, cすべて','bのみを除いたすべて'],answer:0,explain:{correct:'aの速やかな無効化とcの引き継ぎ確認は基本的かつ望ましい対応です。bのように後回しにする姿勢は権限が残り続けるリスクを生みます。',wrong:'bは柔軟に見えて、実際には対応を忘れるリスクが高く、不要な権限が長期間残る典型的な原因になります。',practice:'実務では、退職手続きのフローの中にアクセス権限の無効化を必須ステップとして組み込みます。',term:null}},
+ {question:'ある部署が「セキュリティ意識を高めるため、パスワードを毎週変更し、かつ過去に一度も使ったことのない全く新しい文字列を要求する」という運用を続けています。この運用についての適切な指摘は？',choices:['頻繁に変更するほど安全性は必ず高まるので、この運用に問題はない','過度に頻繁な変更要求は、かえって覚えやすいパスワードの使い回しや付箋へのメモといった別のリスクを生むおそれがある','パスワードの運用とセキュリティ全体のリスクは無関係である','この運用があれば、他のセキュリティ対策は一切不要になる'],answer:1,difficulty:'hard',explain:{correct:'過度に頻繁な変更要求は、覚えやすい単純なパスワードの使い回しや付箋メモなど、別のリスクを生むことが知られています。',wrong:'①は単純化しすぎた前提、③はパスワード運用が全体の一部であることを無視、④は他対策の必要性を否定しています。',practice:'実務では、複雑さや変更頻度だけに頼らず、多要素認証などを組み合わせて総合的にセキュリティを高めます。',term:null}},
+ {question:'ある企業で、業務委託先の担当者に、契約範囲を超えて社内の人事データまで閲覧できる権限が誤って付与されていました。この状態を防ぐために重要な考え方は？',choices:['委託先とのやり取りをすべて対面で行うようにする','契約・業務範囲に応じて、必要最小限の権限のみを付与する','委託先の会社の規模を契約時に確認する','委託契約の書類をすべて紙で保管する'],answer:1,explain:{correct:'外部の委託先であっても、業務上必要な範囲だけにアクセスを許可する最小権限の原則が、過剰な権限付与を防ぐ基本的な考え方です。',wrong:'①③④はやり取りの方法や契約書の保管形式、会社規模の話で、権限設計そのものとは無関係です。',practice:'実務では、委託契約の内容に応じてアクセス権限を個別に設定し、定期的に付与状況を棚卸しします。',term:null}},
+ {question:'業務上必要な範囲だけにアクセス権限を与えるという考え方を表す言葉として、最も近いものはどれですか？',choices:['最小権限の原則','データクレンジング','データリネージ','ビジネスグロッサリー'],answer:0,difficulty:'easy',explain:{correct:'業務上必要な範囲だけに権限を絞るという考え方は「最小権限の原則」と呼ばれ、アクセス制御の基本的な考え方の一つです。',wrong:'データクレンジングはデータ品質、データリネージはデータの流れの追跡、ビジネスグロッサリーは用語集に関するテーマで、権限設計とは異なります。',practice:'実務では、役職や業務内容に応じた権限のテンプレート（ロール）を用意し、過不足のない権限を運用します。',term:null}}
+],
+architecture: [
+ {question:'「データアーキテクチャ」という言葉が指しているものとして、最も近いものはどれですか？',choices:['サーバーを設置するデータセンターの建物の設計','全社的な視点で、データの構造や流れをどう設計するかという枠組み','個人が使うパソコンの性能','データを入力する担当者の配置図'],answer:1,difficulty:'easy',explain:{correct:'データアーキテクチャとは、全社的な視点でデータの構造・流れ・保管場所などを設計する枠組みのことです。',wrong:'①はデータセンターという建物の話、③はPC性能、④は人員配置の話で、いずれも「データの構造設計」という意味とは異なります。',practice:'実務では、部門を横断してデータがどう流れるかを可視化した「データフロー図」などを用いて設計を進めます。',term:'データアーキテクチャ → 全社視点でデータの構造や流れをどう設計するかという枠組みのこと。'}},
+ {question:'ある会社では、部署ごとにシステムを個別に導入した結果、システムAとシステムBが直接つながり、さらにBとCが直接つながり…と、システム間の連携が複雑に絡み合ってしまいました（いわゆる「スパゲッティ状態」）。この状態を防ぐためのアーキテクチャ上の工夫として適切なものは？',choices:['システムの数をできるだけ減らし、1つのシステムにすべて統合する','データ連携のハブとなる仕組みを介して、システム間を間接的につなぐ','システム間の連携をすべて手作業でのファイル受け渡しに戻す','各システムの担当者同士で個別に調整すればよく、設計上の工夫は不要である'],answer:1,explain:{correct:'システム同士を直接つなぐ「点と点」の連携が増えると複雑化します。データ連携のハブ（中継地点）を介することで、連携をシンプルに保てます。',wrong:'①は現実的でない場合が多く、③はミスや遅延のリスクを増やします。④は場当たり的な対応で、複雑化を防ぐ設計にはなりません。',practice:'実務では、データ連携基盤（ハブ）を介して各システムをつなぐアーキテクチャにすることで、新しいシステムの追加時にも影響範囲を抑えられます。',term:null}},
+ {question:'新しいシステムを導入する際のデータアーキテクチャの検討として、次のa〜cが挙がっています。「望ましい」ものだけの組み合わせはどれですか。\na．そのデータの「正」となるシステム（システム・オブ・レコード）を明確にする\nb．同じデータを複数のシステムで別々に正として管理してよい\nc．他システムとの連携方法をあらかじめ設計しておく',choices:['a, cのみ','bのみ','a, b, cすべて','aのみ'],answer:0,explain:{correct:'aのように「どこが正なのか」を明確にすることと、cの連携設計は、データの整合性を保つ上で重要です。bのように同じデータを複数箇所で別々に正として管理すると、食い違いの温床になります。',wrong:'bは一見柔軟に見えますが、「どちらが正しいデータか分からない」という混乱を招きやすい設計です。',practice:'実務では、顧客データなら顧客マスタシステムを「システム・オブ・レコード」と定め、他システムはそこを参照する設計にします。',term:'システム・オブ・レコード → あるデータについて「これが正しい情報である」とする基準となるシステムのこと。'}},
+ {question:'ある会社が「将来の変化を見越して、今後10年間一切変更しなくてよい完璧なデータアーキテクチャを、導入前にすべて設計し尽くす」という方針を掲げています。この方針についての適切な指摘は？',choices:['完璧に設計しきることは常に可能であり、目指すべきである','ビジネス環境は変化し続けるため、将来の変更を前提とした柔軟性のある設計の方が現実的である','一度設計したアーキテクチャは、その後絶対に見直してはならない','アーキテクチャの設計に時間をかけることに意味はない'],answer:1,difficulty:'hard',explain:{correct:'ビジネスや技術は変化し続けるため、「変更されないこと」を前提にした設計より、変化に対応しやすい柔軟な設計の方が現実的です。',wrong:'①は将来を完全に予測できるという非現実的な前提です。③は柔軟性を否定し、④は設計の重要性自体を否定しており、いずれも適切ではありません。',practice:'実務では、主要な構造は安定させつつ、拡張や変更がしやすいように余地を持たせた設計（疎結合な設計など）を心がけます。',term:null}},
+ {question:'「データフロー図」という言葉が指すものとして、最も近いものはどれですか？',choices:['社員の座席配置を示した図','データがどのシステムからどのシステムへ、どう流れるかを示した図','会社の売上推移を示したグラフ','サーバー室の温度管理の記録'],answer:1,difficulty:'easy',explain:{correct:'データフロー図とは、データがどこで発生し、どのシステムを経由し、どこで使われるかという流れを図示したものです。',wrong:'①③④はいずれもデータの流れとは無関係な情報です。',practice:'実務では、新しいシステムを追加する前にデータフロー図を確認し、既存の流れへの影響を検討します。',term:null}},
+ {question:'ある企業で、長年使われてきた古い基幹システムを新しいシステムに置き換える計画が進んでいます。移行にあたってアーキテクチャ上、特に注意すべきことは？',choices:['見た目のデザインだけを新しくすればよい','古いシステムに接続している他のシステムへの影響範囲を事前に洗い出す','移行は一度にすべて完了させ、段階的な移行は避けるべきである','旧システムのデータはすべて破棄してから移行を始める'],answer:1,explain:{correct:'長年使われてきたシステムには、他の多くのシステムが接続していることが多く、置き換えによる影響範囲を事前に把握しておくことが不可欠です。',wrong:'①は表面的な変更にすぎません。③は影響が大きすぎるリスクを高め、④はデータ消失という重大な問題を引き起こします。',practice:'実務では、影響範囲の調査（依存関係の洗い出し）を行った上で、段階的な移行計画を立てることが一般的です。',term:null}},
+ {question:'データアーキテクチャの設計方針として、次のa〜cが検討されています。「望ましくない」ものだけの組み合わせはどれですか。\na．業務部門の意見を聞かず、情報システム部門だけで構造を決定する\nb．主要なデータ領域ごとに責任者を置き、設計の妥当性を確認してもらう\nc．新しいシステムを追加するたびに、既存の設計方針との整合性を確認する',choices:['aのみ','bのみ','cのみ','b, cのみ'],answer:0,explain:{correct:'aのように業務部門を関与させずに情報システム部門だけで決定すると、実際の業務ニーズと乖離した設計になりがちです。bとcはいずれも望ましい進め方です。',wrong:'bのように責任者に確認してもらうこと、cのように整合性を確認し続けることは、アーキテクチャの品質を保つ上で重要な取り組みです。',practice:'実務では、アーキテクチャの重要な意思決定を行う「アーキテクチャレビュー」の場に、業務部門の代表も参加させることがあります。',term:null}},
+ {question:'ある会社が、部門ごとに完全に独立したデータ基盤を持ち、部門間でのデータ共有を一切考慮しない設計を続けています。この状態が引き起こしうるリスクとして最も適切なものは？',choices:['部門ごとの意思決定が速くなるので、リスクは特にない','全社横断での分析やAI活用がしづらくなり、部門間で同じようなデータ整備を重複して行うことになる','データの保存容量が減り、コストが下がる','セキュリティが強化され、情報漏えいのリスクがなくなる'],answer:1,difficulty:'hard',explain:{correct:'部門間の連携を考慮しない設計は、全社横断的な分析やAI活用の妨げになるだけでなく、似たようなデータ整備をあちこちの部門で重複して行う非効率も生みます。',wrong:'①は短期的なメリットのみに注目しています。③④はこの設計方針から直接導かれる結果ではありません。',practice:'実務では、部門ごとの独立性を保ちつつも、全社共通のデータ連携基盤や標準を用意し、必要なときに横断的な活用ができるようにします。',term:null}},
+ {question:'システム間でデータをやり取りする方式として、「必要なときにその都度リアルタイムで連携する方式」と「決まった時間にまとめて連携するバッチ方式」があります。この使い分けについて適切な説明は？',choices:['常にリアルタイム連携の方が優れているので、バッチ方式は使うべきではない','即時性が重要な用途にはリアルタイム連携、大量データの定期処理にはバッチ方式など、用途に応じて使い分ける','バッチ方式は古い技術なので、今後は完全に廃止される','データの種類にかかわらず、常に同じ方式を使うべきである'],answer:1,explain:{correct:'即時性が求められる場面（在庫のリアルタイム反映など）にはリアルタイム連携、大量データを効率的にまとめて処理したい場面にはバッチ方式など、用途に応じた使い分けが実務的です。',wrong:'①③④はいずれも「どちらか一方が常に正しい」という極端な考え方で、実際には目的に応じた選択が必要です。',practice:'実務では、日次の集計処理にはバッチ、注文確定などの即時反映が必要な処理にはリアルタイム連携を使うといった設計がよく見られます。',term:null}},
+ {question:'複数のデータ領域（顧客・商品・取引など）ごとに、それぞれ責任を持つ担当を明確にし、全社的な整合性を保ちながら設計を進める考え方を指す言葉として、最も近いものはどれですか？',choices:['データドメインごとの責任分担',' サーバーの負荷分散','パスワードの複雑化','ネットワークの冗長化'],answer:0,difficulty:'easy',explain:{correct:'データ領域（ドメイン）ごとに責任者を置き、全体の整合性を保ちながら設計・管理する考え方は、データアーキテクチャにおける基本的な進め方の一つです。',wrong:'②③④はいずれもインフラやセキュリティの技術的な話で、データ領域ごとの責任分担というテーマとは異なります。',practice:'実務では、「顧客ドメイン」「商品ドメイン」のようにデータ領域を分割し、それぞれに責任者を置く設計がよく取られます。',term:null}}
+],
+warehouse: [
+ {question:'「データウェアハウス」という言葉が指すものとして、最も近いものはどれですか？',choices:['日々の業務処理を行うためのシステム','分析やレポート作成のために、複数のシステムからデータを集約・整理した基盤','社員が使うノートパソコンの保管庫','データを一時的にキャッシュするだけの仕組み'],answer:1,difficulty:'easy',explain:{correct:'データウェアハウスとは、複数の業務システムからデータを集め、分析やレポート作成に適した形に整理して蓄積する基盤のことです。',wrong:'①は日々の業務処理を行う運用システム（基幹システムなど）の役割で、分析用途とは目的が異なります。③④は無関係な内容です。',practice:'実務では、営業・在庫・会計など複数のシステムのデータをデータウェアハウスに集約し、経営層向けのレポートを作成します。',term:'データウェアハウス → 分析やレポート作成のために、複数のシステムからデータを集約・整理して蓄積する基盤のこと。'}},
+ {question:'ある会社で、営業部門と経営企画部門がそれぞれ独自に売上の集計を行っており、同じ月の売上なのに数字が微妙に異なっていました。この問題を防ぐための一般的な考え方は？',choices:['どちらの部門の数字が正しいか、毎回話し合いで決める','分析用の数字は共通のデータウェアハウスやデータ基盤から取得し、算出方法を統一する','数字が合わないことは仕方がないので、そのまま報告する','売上の集計自体をやめる'],answer:1,explain:{correct:'部門ごとに別々の方法で集計すると数字がずれるのは典型的な問題です。共通のデータ基盤から取得し、算出方法（税込・税抜きなど）を統一することで一貫性を保てます。',wrong:'①は都度の調整コストが大きく、③は問題を放置しています。④は業務上現実的ではありません。',practice:'実務では「信頼できる唯一の情報源（シングル・ソース・オブ・トゥルース）」という考え方のもと、分析用データの出どころを一本化します。',term:'シングル・ソース・オブ・トゥルース → 部門を問わず、分析や報告の際に参照すべき「唯一の信頼できるデータの出どころ」のこと。'}},
+ {question:'データウェアハウスの運用方針として、次のa〜cが検討されています。「望ましい」ものだけの組み合わせはどれですか。\na．過去の履歴データも一定期間保持し、時系列での分析ができるようにする\nb．最新のデータだけを保持し、古いデータは即座に削除する\nc．集計処理の負荷を考慮し、あらかじめ集計済みのテーブルも用意しておく',choices:['a, cのみ','bのみ','a, b, cすべて','cのみ'],answer:0,explain:{correct:'aのように履歴を保持することで、トレンド分析や前年比較が可能になります。cの集計済みテーブルは、分析処理の負荷軽減に役立ちます。bのように古いデータをすぐ削除すると、時系列分析ができなくなってしまいます。',wrong:'bは一見データ量を抑えられて良さそうですが、過去との比較分析ができなくなるという重要な機能を失います。',practice:'実務では、詳細データは一定期間保持しつつ、古いデータは要約した形で長期保存するなどの工夫を行います。',term:null}},
+ {question:'ある部署の担当者が、セルフサービス型のBIツールを使って、独自の判断で全社の売上指標を計算し、経営会議で発表しました。しかし、その計算方法が正式なルールと異なっており、混乱を招きました。この事例から学べる教訓は？',choices:['セルフサービスBIツールは危険なので、全面的に禁止すべきである','セルフサービスでの分析を許容しつつも、重要な指標の定義やルールは共有・統一しておく必要がある','経営会議での発表は、事前確認なしで自由に行ってよい','指標の計算方法は、部署ごとに違っていても問題ない'],answer:1,difficulty:'hard',explain:{correct:'セルフサービスでの分析は現場の機動力を高める一方、重要指標の定義がバラバラだと混乱を招きます。柔軟性と統一のバランスが必要です。',wrong:'①は現場の分析力を過度に制限し、③④は今回のような混乱を助長する考え方です。',practice:'実務では、重要な経営指標については「指標カタログ」のような形で定義を明文化し、誰が使っても同じ計算結果になるようにします。',term:null}},
+ {question:'「ETL」という言葉が指すものとして、最も近いものはどれですか？',choices:['データを抽出し、加工し、目的の場所へ読み込む一連の処理','データを暗号化する技術','データベースのバックアップを取る作業','ネットワークの通信速度を測定する仕組み'],answer:0,difficulty:'easy',explain:{correct:'ETLとは、データを抽出（Extract）し、目的に合わせて加工（Transform）し、格納先に読み込む（Load）という一連の処理のことです。',wrong:'②③④はいずれもETLの定義とは異なる技術・作業です。',practice:'実務では、複数の業務システムから売上データを抽出し、統一フォーマットに加工した上でデータウェアハウスに読み込む、というETL処理がよく行われます。',term:'ETL → データを抽出（Extract）・加工（Transform）・読み込み（Load）する一連の処理のこと。'}},
+ {question:'ある会社が「分析用のデータ基盤には、加工前の生データをそのまま大量に貯めておき、必要なときに必要な形に加工して使う」という方針を取っています。このような貯め方をする基盤を表す言葉として最も近いものは？',choices:['データレイク','データベース','データカタログ','データクレンジング'],answer:0,difficulty:'normal',explain:{correct:'加工前の生データをそのままの形で大量に蓄積しておく基盤は「データレイク」と呼ばれ、あらかじめ整理された「データウェアハウス」とは異なる特徴を持ちます。',wrong:'データベースは業務処理用の記録の仕組み全般を指す広い言葉、データカタログはデータの一覧・検索の仕組み、データクレンジングは品質改善作業で、いずれも今回の説明とは異なります。',practice:'実務では、まずデータレイクに生データを集約し、その後、分析しやすい形に整えてデータウェアハウスに格納する、という組み合わせもよく使われます。',term:'データレイク → 加工前の生データを、そのままの形で大量に蓄積しておく基盤のこと。'}},
+ {question:'BIダッシュボードの運用について、次のa〜cが検討されています。「望ましくない」ものだけの組み合わせはどれですか。\na．誰が見ても同じ定義で数字が計算されるよう、指標の算出ロジックを共有する\nb．担当者が異動するたびに、その人が独自の判断で指標の定義を変えてよい\nc．ダッシュボードの数字がおかしいと感じたら、算出元のデータを確認できるようにしておく',choices:['bのみ','aのみ','cのみ','a, cのみ'],answer:0,explain:{correct:'aの定義共有とcの確認可能性の確保は、ダッシュボードへの信頼性を保つために重要です。bのように担当者が変わるたびに定義が変わってしまうと、過去との比較や部門間の比較ができなくなります。',wrong:'bは一見柔軟な対応に見えますが、指標の一貫性が失われ、経営判断に使うデータとしての信頼性を損ないます。',practice:'実務では、指標の定義変更には正式な承認プロセスを設け、変更履歴を記録しておくことが望ましいとされています。',term:null}},
+ {question:'ある企業で、日々の売上明細を1件ずつ毎回集計しなおしていたため、経営レポートの表示に非常に時間がかかっていました。この処理速度の問題を改善する一般的な工夫は？',choices:['レポートの表示自体をやめる','あらかじめ集計済みのサマリーテーブル（データマート）を用意しておき、そこを参照する','明細データをすべて削除する','担当者を増やして手作業で集計する'],answer:1,difficulty:'normal',explain:{correct:'毎回すべての明細から集計しなおすと処理に時間がかかります。あらかじめ集計済みのサマリーテーブルを用意しておくことで、参照時の負荷を大きく減らせます。',wrong:'①は本末転倒、③は必要なデータを失い、④は手作業によるミスのリスクを高めます。',practice:'実務では、用途に応じた集計済みテーブル（データマート）を部門別・目的別に用意し、参照速度と正確性を両立させます。',term:'データマート → 特定の部門や目的に合わせて、あらかじめ集計・整理しておいたデータの集まりのこと。'}},
+ {question:'データウェアハウスとデータレイクの違いについて、最も適切な説明はどれですか？',choices:['データウェアハウスは整理・構造化されたデータを扱うのに対し、データレイクは未加工の多様な形式のデータをそのまま蓄積できる','両者はまったく同じものであり、呼び方が違うだけである','データレイクはセキュリティが不要なデータのみを扱う','データウェアハウスは分析には一切使われない'],answer:0,difficulty:'normal',explain:{correct:'データウェアハウスは整理・構造化されたデータを扱うのに対し、データレイクは形式を問わず未加工のデータをそのまま蓄積できる点が大きな違いです。',wrong:'②は明確に誤りです。③④はそれぞれの特徴を正しく説明していません。',practice:'実務では、目的に応じて両者を組み合わせ、生データはデータレイクに、整理された分析用データはデータウェアハウスに、という使い分けをすることがあります。',term:null}},
+ {question:'経営層向けのレポート作成において、「先月と比べてどう変化したか」を正しく把握するために特に重要なデータウェアハウスの特徴は？',choices:['最新の1日分のデータしか保持しないこと','過去のデータを一定期間蓄積し、時系列で比較できること','データをすべて匿名加工しておくこと','データの保存場所を頻繁に変更すること'],answer:1,difficulty:'easy',explain:{correct:'前月比などの時系列比較を行うには、過去のデータが一定期間蓄積されている必要があります。',wrong:'①は比較対象がなくなってしまいます。③④は時系列比較とは無関係な観点です。',practice:'実務では、月次・年次のトレンド分析ができるよう、一定期間分の履歴データを保持する設計にします。',term:null}}
+],
+integration: [
+ {question:'「データ統合」という言葉が指しているものとして、最も近いものはどれですか？',choices:['複数のシステムやファイルに散らばったデータを、連携・集約してひとまとまりにして扱えるようにすること','データを1つのファイルに手作業でコピー&ペーストすること','データを削除して整理すること','システムのデザインを統一すること'],answer:0,difficulty:'easy',explain:{correct:'データ統合とは、複数のシステムやファイルに分散したデータを連携・集約し、一体として扱えるようにする取り組みのことです。',wrong:'②は手作業のコピー、③はデータ削除、④はデザイン統一の話で、いずれもデータ統合の定義とは異なります。',practice:'実務では、APIやバッチ連携などの技術を使って、複数システム間のデータを自動的に統合する仕組みを構築します。',term:'データ統合 → 複数のシステムやファイルに散らばったデータを、連携・集約してひとまとまりにして扱えるようにすること。'}},
+ {question:'ある会社では、複数の部署がそれぞれ独自のExcel台帳でデータを管理しており、「どれが最新版か分からない」という状況が頻発しています。この課題を根本的に解決するための方向性として適切なものは？',choices:['Excelファイルの保存場所をもう1つ増やす','部署をまたいで共有できる一元化されたシステムやデータ基盤に統合する','ファイル名に「最新」という文字を必ず入れるルールを徹底する','各担当者の記憶に頼って最新版を判断する'],answer:1,difficulty:'normal',explain:{correct:'複数の独立したExcel台帳が並存する状態は、データ統合が行われていないことが根本原因です。一元化されたシステムに統合することで「どれが最新か」という問題自体をなくせます。',wrong:'①は問題を悪化させ、③④は運用でカバーしようとする対症療法で、根本的な解決にはなりません。',practice:'実務では、部署ごとの台帳を統合したデータベースやクラウドサービスに移行し、常に同じ最新データを全員が参照できるようにします。',term:null}},
+ {question:'システム間のデータ連携方法として、次のa〜cが検討されています。「望ましい」ものだけの組み合わせはどれですか。\na．連携するデータの形式（項目名や単位など）をあらかじめ標準化しておく\nb．システムごとに独自の形式のまま、受け取り側で毎回手作業で調整する\nc．連携がエラーで失敗した場合に、検知して通知する仕組みを用意する',choices:['a, cのみ','bのみ','a, b, cすべて','bのみを除いたすべて'],answer:0,explain:{correct:'aの形式標準化とcのエラー検知の仕組みは、安定した連携を実現するために重要です。bのように毎回手作業で調整する方法は、ミスや手間の温床になります。',wrong:'bは一見柔軟に対応しているようで、担当者の負荷が大きく、ミスも発生しやすい方法です。',practice:'実務では、連携データのフォーマットを事前に取り決め、連携処理が失敗した際にアラートが飛ぶ仕組みを整備します。',term:null}},
+ {question:'ある企業が「すべてのシステム間連携を、担当者同士の口頭確認とメールでのファイル送付だけで行う」という運用を続けています。この運用についての適切な指摘は？',choices:['人によるチェックが入るので、最も安全で確実な方法である','手作業でのやり取りは、ミス・遅延・属人化のリスクが大きく、自動化された連携の方が安定しやすい','この方法であれば、担当者が不在でも問題なく連携が続けられる','メールでのやり取りには、特にリスクはない'],answer:1,difficulty:'hard',explain:{correct:'手作業や口頭確認に頼った連携は、ミス・遅延・属人化（その人しか対応できない状態）のリスクが大きくなります。自動化された連携の方が、量が増えても安定して処理できます。',wrong:'①は手作業特有のミスのリスクを見落としています。③は逆に属人化リスクを高めており、④はメールの誤送信などのリスクを軽視しています。',practice:'実務では、定型的なデータ連携は自動化し、人の判断が必要な例外処理のみ人が対応する、という役割分担が現実的です。',term:null}},
+ {question:'「API連携」という言葉が指すものとして、最も近いものはどれですか？',choices:['システム同士が、あらかじめ決められた手順でデータをやり取りする仕組み','データを紙に印刷して手渡しすること','パスワードを設定してデータを守ること','データをすべて削除すること'],answer:0,difficulty:'easy',explain:{correct:'API連携とは、システム同士があらかじめ定められた手順・形式に従って、プログラム的にデータをやり取りする仕組みのことです。',wrong:'②③④はいずれもAPI連携の定義とは無関係です。',practice:'実務では、ECサイトと在庫管理システムをAPIで連携し、注文が入るとリアルタイムで在庫数が更新される、といった使い方がされます。',term:'API連携 → システム同士が、あらかじめ決められた手順でデータをやり取りする仕組みのこと。'}},
+ {question:'ある会社が、新しいシステムを導入するたびに、既存のすべてのシステムと個別に直接連携する設計を繰り返しています。この進め方についての適切な指摘は？',choices:['システムが増えても、連携の複雑さは変わらないので問題ない','システムの数が増えるほど連携の組み合わせが爆発的に増え、保守が難しくなる','個別に直接連携する方が、常に処理速度が最も速い','この設計方針を続けても、将来的な問題は発生しない'],answer:1,difficulty:'hard',explain:{correct:'システムAとB、AとC…のように個別に直接連携を増やしていくと、システムの数が増えるにつれて連携の組み合わせが急激に増え、変更や保守が非常に難しくなります。',wrong:'①③④はいずれも複雑化のリスクを軽視した誤った前提です。',practice:'実務では、データ連携のハブとなる基盤を用意し、そこを介して間接的に連携することで、システムが増えても複雑さを抑えられるように設計します。',term:null}},
+ {question:'システム間でデータを連携する際、送信側と受信側で項目の意味や単位（例：金額が税込か税抜きか）が食い違っていると、どのような問題が起きやすいですか？',choices:['特に問題は起きない','受け取った側で誤った解釈がされ、集計や分析結果が不正確になる','データの連携速度が必ず速くなる','セキュリティが自動的に強化される'],answer:1,difficulty:'normal',explain:{correct:'項目の意味や単位の食い違いがあると、受け取った側がそれに気づかず誤って解釈し、集計や分析結果が不正確になるリスクがあります。',wrong:'①③④はいずれも今回の状況から生じる結果として適切ではありません。',practice:'実務では、連携するデータ項目の意味・単位・形式を事前に取り決めた「連携仕様書」を用意し、双方で認識を合わせます。',term:null}},
+ {question:'データ統合の進め方として、次のa〜cが検討されています。「望ましくない」ものだけの組み合わせはどれですか。\na．統合後のデータ構造を事前に設計せず、とにかく早くつなぎ始める\nb．統合対象のデータの意味や項目定義を、事前に関係者間ですり合わせる\nc．統合後、想定通りにデータが連携できているかテストする',choices:['aのみ','bのみ','cのみ','b, cのみ'],answer:0,explain:{correct:'aのように事前設計をせずに進めると、後から構造の不整合が発覚し、大きな手戻りにつながりやすくなります。bのすり合わせとcのテストは、いずれも統合を確実に成功させるために重要な工程です。',wrong:'bやcを省略すると、後になって「思っていたデータと違った」という問題が発覚しやすくなります。',practice:'実務では、統合プロジェクトの初期段階で関係者を集めたすり合わせの場を設け、設計・実装・テストという段階を踏んで進めます。',term:null}},
+ {question:'ある企業がクラウドサービスを複数導入した結果、それぞれのサービスが独自のデータ形式を持ち、相互にデータをやり取りしづらい状態になっています。この課題に対応する一般的な考え方は？',choices:['クラウドサービスの利用をすべてやめる','業界標準のデータ形式や連携方法（API仕様など）を採用しているサービスを選定・活用する','各サービスのデータはそれぞれ独立したまま、連携は諦める','データ形式の違いは、利用者が個別に覚えて対応すればよい'],answer:1,difficulty:'normal',explain:{correct:'業界で広く使われている標準的なデータ形式やAPI仕様を採用しているサービスを選ぶことで、相互運用性（サービス間でのデータのやり取りのしやすさ）を高められます。',wrong:'①は現実的でなく、③④は問題を放置する対応です。',practice:'実務では、新しいサービスを導入する際に、既存システムとの連携方法（対応しているAPIやデータ形式）をあらかじめ確認します。',term:'相互運用性 → 異なるシステムやサービスの間で、データを問題なくやり取りできる度合いのこと。'}},
+ {question:'システム間の連携でエラーが発生した際、原因調査に時間がかかってしまう状況を改善するために、あらかじめ用意しておくとよいものは？',choices:['エラーの内容や発生箇所を記録するログと、異常を検知した際に通知する仕組み','エラーが起きても誰にも知らせない仕組み','連携処理をすべて手作業に置き換える仕組み','エラーメッセージを表示しないようにする設定'],answer:0,difficulty:'easy',explain:{correct:'エラーの内容や発生箇所を記録するログと、異常検知時の通知の仕組みがあれば、原因調査や対応のスピードが大きく向上します。',wrong:'②④はエラーを隠してしまい、かえって問題の発見を遅らせます。③は自動化のメリットを失う対応です。',practice:'実務では、連携処理にログ出力とアラート機能を組み込み、異常が起きたらすぐに担当者が気づける状態にしておきます。',term:null}}
+],
+content: [
+ {question:'社内のファイルサーバーで、「案件A_最終版.xlsx」「案件A_最終版2.xlsx」「案件A_本当の最終版.xlsx」のようなファイルが並んでいて、どれが本物の最新版か分かりません。この状態を防ぐための一般的な対策は？',choices:['ファイル名の付け方（命名ルール）とバージョン管理の仕組みを整える','ファイルをすべて削除して、記憶に頼って作業する','ファイル名を毎回自由に付けてよいことにする','ファイルサーバーの容量を増やす'],answer:0,difficulty:'easy',explain:{correct:'ファイル名の命名ルールと、正式なバージョン管理の仕組み（版数管理など）を整えることで、「どれが最新か分からない」という状態を防げます。',wrong:'②はデータを失うリスクが高く、③は問題を悪化させ、④は容量の問題であり最新版が分からないという課題の解決にはなりません。',practice:'実務では、「案件名_日付_版数」のような命名ルールを定めたり、正式なバージョン管理ツールを導入したりします。',term:null}},
+ {question:'「コンテンツのライフサイクル管理」という考え方が指すものとして、最も近いものはどれですか？',choices:['文書やファイルが作成されてから、更新・承認を経て、最終的に廃棄・アーカイブされるまでの流れを管理すること','ファイルの保存容量だけを管理すること','文書のデザインだけを統一すること','ファイルへのアクセス速度を計測すること'],answer:0,difficulty:'easy',explain:{correct:'コンテンツのライフサイクル管理とは、文書やファイルが作成されてから廃棄・アーカイブされるまでの一連の流れを管理する考え方です。',wrong:'②③④はいずれもライフサイクル管理の一部の側面や無関係な要素にすぎません。',practice:'実務では、「作成中」「レビュー中」「承認済み」「廃止」といった状態（ステータス）を文書に付与し、管理することがあります。',term:'コンテンツのライフサイクル管理 → 文書やファイルが作成されてから廃棄・アーカイブされるまでの流れを管理する考え方のこと。'}},
+ {question:'ある会社の文書管理方針として、次のa〜cが検討されています。「望ましい」ものだけの組み合わせはどれですか。\na．重要な文書には、作成者・作成日・承認者などのタグ（メタデータ）を付ける\nb．すべての文書を、誰でも自由に上書き保存できるようにする\nc．一定期間が過ぎた古い文書は、廃棄基準に沿ってアーカイブまたは削除する',choices:['a, cのみ','bのみ','a, b, cすべて','aのみ'],answer:0,explain:{correct:'aのタグ付けとcの廃棄基準に沿った整理は、文書管理の質を高める上で重要な取り組みです。bのように誰でも自由に上書きできる状態は、意図しない改変や消失のリスクを高めます。',wrong:'bは一見柔軟に見えますが、重要な文書が誤って上書き・削除されるリスクを増大させます。',practice:'実務では、重要文書には編集権限を限定し、変更履歴を残せるバージョン管理の仕組みを併用します。',term:null}},
+ {question:'ある会社が「情報漏えいを防ぐため、あらゆる文書を一切共有せず、各担当者のパソコンだけに個別に保存する」という方針を取っています。この方針についての適切な指摘は？',choices:['情報漏えいのリスクが完全になくなるので、最も優れた方法である','必要な人が必要な文書にアクセスできなくなり、業務が停滞したり、担当者退職時に情報が失われたりするおそれがある','この方針であれば、バックアップは一切不要になる','ファイルの管理コストは、この方針によってゼロになる'],answer:1,difficulty:'hard',explain:{correct:'共有を完全に排除すると、必要な人が必要な情報にアクセスできず業務が滞るだけでなく、その担当者が異動・退職した際に情報が失われるリスクも高まります。',wrong:'①は個人PCの紛失・故障などの別のリスクを見落としています。③④はこの方針から直接導かれる結論ではありません。',practice:'実務では、アクセス権限を適切に設定した共有の仕組みを使い、「共有しない」のではなく「必要な人にだけ共有する」形を目指します。',term:null}},
+ {question:'社内にどのような文書がどこにあるか分からず、同じような資料を何度も作り直してしまうという問題が起きています。この問題を防ぐための工夫として最も適切なものは？',choices:['文書の作成自体を制限する','文書に検索しやすいタグや分類を付け、全社で検索できる仕組みを整える','過去の文書はすべて削除する','文書のフォーマットをすべて手書きに統一する'],answer:1,difficulty:'normal',explain:{correct:'文書に検索しやすいタグや分類（メタデータ）を付け、全社的に検索できる仕組みを整えることで、既存資料の発見と再利用がしやすくなります。',wrong:'①③④はいずれも問題を悪化させるか、無関係な対応です。',practice:'実務では、社内ポータルやドキュメント管理ツールにタグ・カテゴリを設定し、キーワード検索できるようにします。',term:null}},
+ {question:'ある文書に「ドラフト」「レビュー中」「承認済み」「廃止」といった状態（ステータス）を付けて管理する取り組みの主な目的は？',choices:['文書の見た目を華やかにするため','その文書が今どの段階にあり、信頼して使ってよい状態かどうかを関係者が判断できるようにするため','文書のファイルサイズを小さくするため','文書の作成者を隠すため'],answer:1,difficulty:'normal',explain:{correct:'ステータスを明示することで、関係者は「これは正式な承認済み文書か、まだ検討中の草稿か」を判断でき、誤って古い草稿を使ってしまうといった事故を防げます。',wrong:'①③④はいずれもステータス管理の目的とは無関係です。',practice:'実務では、文書管理システムでステータスを設定し、承認済みの文書だけを正式なものとして参照するルールを徹底します。',term:null}},
+ {question:'「非構造化データ」という言葉が指すものとして、最も近いものはどれですか？',choices:['表形式で整理された、決まった項目を持つデータ','文書・画像・動画など、決まった形式に沿っていない多様な形のデータ','数値だけで構成されたデータ','必ずデータベースに保存されているデータ'],answer:1,difficulty:'easy',explain:{correct:'非構造化データとは、文書・画像・動画・音声など、表形式のように決まった項目に整理されていない多様な形式のデータのことです。',wrong:'①はむしろ「構造化データ」の説明です。③④は非構造化データの定義には当てはまりません。',practice:'実務では、契約書や会議議事録、写真など、非構造化データを検索・分類しやすくするためのタグ付けや管理ツールの活用が重要になります。',term:'非構造化データ → 文書・画像・動画など、決まった形式に沿っていない多様な形のデータのこと。'}},
+ {question:'ある部署で、機密性の高い契約書ファイルが、社内の誰でも閲覧できる共有フォルダに置かれたままになっていました。この状態への対応として最も適切なものは？',choices:['そのまま放置しても、誰も気にしないので問題ない','契約書の重要度に応じて、アクセスできる人を限定したフォルダに移動する','契約書自体を削除してしまう','ファイル名を分かりにくいものに変更するだけで対応する'],answer:1,difficulty:'normal',explain:{correct:'機密性の高い文書は、その重要度に応じてアクセス権限を制限したフォルダで管理する必要があります。単なる置き場所の問題ではなく、アクセス制御の観点で対応することが重要です。',wrong:'①はリスクを放置し、③は必要な文書を失い、④はファイル名を変えただけでは実質的なアクセス制限にはなりません。',practice:'実務では、文書の機密度に応じたフォルダ構成とアクセス権限の設計を行い、定期的に権限設定を見直します。',term:null}},
+ {question:'文書管理の観点から、フォルダ構成やファイル命名のルールを整備する主な目的として、最も適切なものはどれですか？',choices:['見た目をおしゃれにするため','必要な文書を誰もが迷わず見つけられるようにし、重複作成や誤用を防ぐため','ファイルの保存容量を減らすため','パスワードを覚えやすくするため'],answer:1,difficulty:'normal',explain:{correct:'フォルダ構成やファイル命名のルールを整備する主な目的は、必要な文書を誰もが迷わず見つけられるようにし、重複作成や古い版の誤用を防ぐことです。',wrong:'①③④はいずれも命名ルール整備の主目的とは異なります。',practice:'実務では、部署・案件・年度などの軸でフォルダ構成を統一し、ファイル名にも一定のルールを設けます。',term:null}},
+ {question:'古い文書を一定期間後にアーカイブ（別の場所へ移動して保管）したり、廃棄したりするルールを設ける主な理由として、最も適切なものはどれですか？',choices:['文書を探しにくくするため','必要な文書を見つけやすく保ちつつ、保管コストやリスクを適切に管理するため','文書の内容を分かりにくくするため','社員の作業を増やすため'],answer:1,difficulty:'normal',explain:{correct:'古い文書をそのまま放置すると、現役の文書が探しにくくなったり、不要な情報の保管によるコストやセキュリティリスクが増えたりします。アーカイブや廃棄のルールは、これらを適切に管理するために設けられます。',wrong:'①③④はいずれもアーカイブ・廃棄ルールを設ける目的とは正反対、または無関係です。',practice:'実務では、文書の種類ごとに保存期間を定めた「文書保存規程」を整備し、期限が来た文書を適切に処理します。',term:null}}
+],
+modeling: [
+ {question:'「データモデリング」という言葉が指しているものとして、最も近いものはどれですか？',choices:['データの構造（どんな項目があり、どうつながっているか）を設計すること','データを美しく可視化すること','データを暗号化すること','データを削除すること'],answer:0,difficulty:'easy',explain:{correct:'データモデリングとは、データがどのような項目を持ち、それぞれがどう関連しているかという構造を設計する作業のことです。',wrong:'②③④はいずれもデータモデリングの定義とは異なります。',practice:'実務では、システムを作り始める前に、顧客・注文・商品などのデータ同士の関係を図で整理する作業として行われます。',term:'データモデリング → データの構造（どんな項目があり、どうつながっているか）を設計すること。'}},
+ {question:'あるシステム開発チームが、データの構造を十分に設計しないまま開発を始めてしまい、後になって「この項目が足りない」「この関連付けができない」といった問題が次々と発覚しました。この事例から学べる教訓は？',choices:['設計は開発が終わってから考えればよい','システム構築の前段階で、データの構造をきちんと設計しておくことで、後の手戻りを減らせる','データの構造は一度も見直す必要がない','データモデリングは不要な作業である'],answer:1,difficulty:'normal',explain:{correct:'データの構造を事前にしっかり設計しておくことで、開発が進んでから「項目が足りない」といった大きな手戻りを防ぐことができます。',wrong:'①③④はいずれもデータモデリングの重要性を軽視しており、今回の教訓とは逆の考え方です。',practice:'実務では、開発の初期段階で概念的なデータモデル（大まかな構造）を作り、関係者間で認識を合わせてから詳細設計に進みます。',term:null}},
+ {question:'データベースの設計で、同じ情報（例えば顧客の住所）があちこちのテーブルに重複して保存されている状態を防ぎ、1か所にまとめて管理しやすくする設計上の工夫を指す言葉として、最も近いものはどれですか？',choices:['正規化','匿名加工','データクレンジング','アクセス制御'],answer:0,difficulty:'normal',explain:{correct:'データの重複を減らし、整合性を保ちやすくするための設計上の工夫は「正規化」と呼ばれます。',wrong:'匿名加工は個人情報の保護、データクレンジングは既存データの品質改善、アクセス制御は利用者の制限に関するテーマで、いずれも今回の説明とは異なります。',practice:'実務では、正規化によって顧客情報を1つのテーブルにまとめ、他のテーブルからはそのIDだけを参照する設計にします。',term:'正規化 → データの重複を減らし、整合性を保ちやすくするためのデータ構造の設計上の工夫のこと。'}},
+ {question:'ある分析システムでは、処理速度を優先するために、あえてデータを正規化せず、一部の情報を複数のテーブルに重複して持たせる設計を採用しました。この判断についての適切な考え方は？',choices:['正規化しないことは常に間違った設計である','分析処理の速度を重視する場面では、あえて重複を許容する設計判断もあり得る','重複を許容した場合、データの整合性については一切考慮しなくてよい','この設計は、業務システムであっても常に採用すべきである'],answer:1,difficulty:'hard',explain:{correct:'正規化はデータの整合性を保つ上で重要ですが、分析用途など処理速度が優先される場面では、あえて重複を許容する「非正規化」の設計判断が取られることもあります。',wrong:'①は極端な言い切りです。③は整合性維持の必要性を放棄しており危険です。④は業務システム（日々のデータ更新が多い場面）には必ずしも適していません。',practice:'実務では、日々の取引を記録する業務システムは正規化を重視し、分析用のデータ基盤では処理速度を重視して非正規化する、という使い分けがよく行われます。',term:null}},
+ {question:'データモデルを設計する際に、「顧客」と「注文」のように、それぞれの情報のまとまりを指す言葉として最も近いものはどれですか？',choices:['エンティティ','メタデータ','データレイク','データマート'],answer:0,difficulty:'easy',explain:{correct:'「顧客」「注文」「商品」のように、データモデルの中でひとまとまりとして扱われる情報の単位は「エンティティ」と呼ばれます。',wrong:'メタデータはデータの説明情報、データレイクとデータマートは分析基盤の種類を指す言葉で、いずれもエンティティの定義とは異なります。',practice:'実務では、業務で扱う主要な情報（顧客、商品、注文など）をエンティティとして洗い出すことから、データモデリングを始めます。',term:'エンティティ → 「顧客」「注文」のように、データモデルにおいてひとまとまりとして扱われる情報の単位のこと。'}},
+ {question:'データモデルを設計する進め方として、次のa〜cが検討されています。「望ましい」ものだけの組み合わせはどれですか。\na．業務部門にヒアリングをせず、情報システム部門だけで構造を決める\nb．業務でどのような情報がどう関連しているか、業務部門を交えて整理する\nc．設計したモデルを、実際の業務の流れに照らして確認する',choices:['b, cのみ','aのみ','a, b, cすべて','aとbのみ'],answer:0,explain:{correct:'bのように業務部門を交えて整理すること、cのように実際の業務に照らして確認することは、実態に即したデータモデルを作る上で重要です。aのように業務部門を関与させないと、実務と乖離した設計になりがちです。',wrong:'aは効率的に見えて、実際の業務実態を反映できない構造になりやすいリスクがあります。',practice:'実務では、業務部門へのヒアリングを重ねながらデータモデルの草案を作り、レビューを通じて精度を高めていきます。',term:null}},
+ {question:'ある会社が、将来起こりうるあらゆる可能性を想定し、非常に複雑で項目数の多いデータモデルを最初から作り込みました。しかし、実際にはほとんどの項目が使われず、開発も運用も複雑になってしまいました。この事例から学べる教訓は？',choices:['複雑であればあるほど、優れたデータモデルである','必要以上に複雑なモデルを最初から作り込むと、開発・運用の負担が増し、実用性を損なうことがある','データモデルは一度作ったら、絶対に修正してはならない','将来のことは一切考えず、目先のことだけを設計すればよい'],answer:1,difficulty:'hard',explain:{correct:'将来の可能性をすべて盛り込もうとして過度に複雑なモデルを作ると、開発や運用の負担が増し、かえって実用性を損なうことがあります。必要な範囲に適切にとどめる判断も重要です。',wrong:'①は複雑さと質を混同しています。③はモデルが更新されるものであるという前提と矛盾し、④は将来を全く考慮しない極端な考え方です。',practice:'実務では、まず現時点で必要な範囲でモデルを設計し、将来の拡張が必要になった時点で段階的に見直すアプローチがよく取られます。',term:null}},
+ {question:'データモデルにおいて、あるテーブルの中で1件1件のデータを一意に識別するための項目を指す言葉として、最も近いものはどれですか？',choices:['主キー','メタデータ','ビジネスグロッサリー','データリネージ'],answer:0,difficulty:'easy',explain:{correct:'テーブルの中で1件1件のデータを一意に識別するための項目は「主キー」と呼ばれます。',wrong:'メタデータはデータの説明情報、ビジネスグロッサリーは用語集、データリネージはデータの流れの追跡に関する言葉で、いずれも主キーの定義とは異なります。',practice:'実務では、顧客テーブルの「顧客ID」のように、重複のない一意な項目を主キーとして設定します。',term:'主キー → テーブルの中で1件1件のデータを一意に識別するための項目のこと。'}},
+ {question:'データモデルの項目名について、あるテーブルでは「顧客名」、別のテーブルでは「取引先名」というように、実質同じ内容を指す項目に異なる名前が付けられていました。この状態が引き起こす問題として最も適切なものは？',choices:['特に問題は起きない','同じ内容のデータであることに気づきにくくなり、連携や分析の際に混乱を招く','処理速度が必ず向上する','セキュリティが自動的に強化される'],answer:1,difficulty:'normal',explain:{correct:'同じ内容を指す項目に異なる名前がついていると、それが同じものであると気づきにくくなり、データ連携や分析の際に混乱や誤りを招くおそれがあります。',wrong:'①③④はいずれも今回の状況から生じる結果として適切ではありません。',practice:'実務では、命名規則（ネーミングルール）を定め、同じ意味の項目には全社で統一した名前を使うようにします。',term:null}},
+ {question:'データモデリングを行う際、「概念モデル」「論理モデル」「物理モデル」のように段階を分けて設計を進める主な理由として、最も適切なものはどれですか？',choices:['作業工程を増やして時間をかけるため','業務的な意味の整理から技術的な実装の詳細まで、段階的に精度を高めながら設計を進めるため','データモデリングを難しく見せるため','特に理由はなく、慣習として行われているだけである'],answer:1,difficulty:'hard',explain:{correct:'概念モデル（業務的な大枠の整理）→論理モデル（詳細な構造の整理）→物理モデル（実際のシステムへの実装）という段階を踏むことで、業務の意味を見失わずに、精度を高めながら設計を進められます。',wrong:'①③④はいずれも段階を分ける本来の目的とは異なります。',practice:'実務では、まず業務部門と一緒に概念モデルで大枠を合意し、その後、詳細な論理モデル・物理モデルへと落とし込んでいきます。',term:null}}
+],
+storage: [
+ {question:'「データのバックアップ」という言葉が指すものとして、最も近いものはどれですか？',choices:['データが失われた場合に備えて、複製を別の場所に保存しておくこと','データを暗号化すること','データを匿名加工すること','データの意味を説明する情報を整備すること'],answer:0,difficulty:'easy',explain:{correct:'バックアップとは、システム障害や誤操作などでデータが失われた場合に備えて、複製を別の場所に保存しておくことです。',wrong:'②③④はいずれもバックアップの定義とは異なる別のテーマです。',practice:'実務では、重要なデータについて定期的にバックアップを取得し、復旧手順もあわせて整備しておきます。',term:'バックアップ → データが失われた場合に備えて、複製を別の場所に保存しておくこと。'}},
+ {question:'ある会社で、重要な顧客データベースが誤操作によって一部消失してしまいましたが、直近のバックアップが存在せず、多くのデータを取り戻せませんでした。この事例から学べる教訓として最も適切なものは？',choices:['バックアップは一度取得すれば、その後は不要である','重要なデータについては、定期的にバックアップを取得し、復旧できる状態を保っておく必要がある','データの消失は防ぎようがないので、対策をする意味はない','バックアップの取得は、情報システム部門にとって重要な業務ではない'],answer:1,difficulty:'normal',explain:{correct:'定期的なバックアップがなければ、いざという時にデータを取り戻せません。重要なデータについては、定期的な取得と復旧手順の整備が不可欠です。',wrong:'①③④はいずれもバックアップの重要性を軽視しており、今回の教訓とは逆の考え方です。',practice:'実務では、バックアップの頻度（毎日・毎週など）と保存期間をデータの重要度に応じて定め、定期的に復旧テストも行います。',term:null}},
+ {question:'データの保存にあたって、次のa〜cの方針が検討されています。「望ましい」ものだけの組み合わせはどれですか。\na．利用頻度の低い古いデータは、コストの低い保存先（アーカイブ用のストレージなど）に移す\nb．すべてのデータを、常に最も高速で高価なストレージにだけ保存する\nc．データの重要度や利用頻度に応じて、保存先やバックアップ頻度を調整する',choices:['a, cのみ','bのみ','a, b, cすべて','bのみを除いたすべて'],answer:0,explain:{correct:'aのように利用頻度に応じて保存先を分けること、cのように重要度に応じて運用を調整することは、コストと利便性のバランスを取る上で有効です。bのようにすべてを最も高価な保存先に置くのはコスト効率が悪くなります。',wrong:'bは一見安全に見えますが、利用頻度の低いデータにまで高いコストをかけることになり、非効率です。',practice:'実務では、直近のデータは高速なストレージに、古いデータは低コストのアーカイブ用ストレージに移す「階層化」という考え方がよく使われます。',term:null}},
+ {question:'ある会社が「コスト削減のため、バックアップは一切取得せず、本番のデータベース1つだけにすべてのデータを保存する」という方針を取っています。この方針についての適切な指摘は？',choices:['コストが下がるので、最も優れた方針である','障害や誤操作でデータが失われた際に、復旧手段がなく重大な損失につながるリスクがある','この方針であれば、システム障害は発生しなくなる','データの重要度にかかわらず、バックアップは常に不要である'],answer:1,difficulty:'hard',explain:{correct:'バックアップを取得しない場合、障害や誤操作が発生した際に復旧手段がなく、事業に重大な影響を及ぼすリスクがあります。短期的なコスト削減が、大きなリスクとのトレードオフになっている点に注意が必要です。',wrong:'①はリスクを軽視しています。③はバックアップの有無と障害発生の有無は無関係です。④は重要度に応じた判断の必要性を否定しており適切ではありません。',practice:'実務では、データの重要度に応じてバックアップの頻度や保存期間を設計し、コストとリスクのバランスを取ります。',term:null}},
+ {question:'「災害復旧（ディザスタリカバリ）計画」という言葉が指すものとして、最も近いものはどれですか？',choices:['大規模な障害や災害が発生した際に、データやシステムをどう復旧させるかをあらかじめ定めた計画','社員が災害時に避難する経路を示した地図','データを美しく可視化するための計画','日々の売上目標を管理する計画'],answer:0,difficulty:'easy',explain:{correct:'災害復旧計画とは、大規模な障害や災害が発生した際に、データやシステムをどのように復旧させるかをあらかじめ定めておく計画のことです。',wrong:'②は防災上の避難計画、③④はデータ運用とは異なるテーマです。',practice:'実務では、バックアップデータの保管場所を本番とは別の地域に分散させるなど、災害時にも復旧できるような備えを行います。',term:'災害復旧（ディザスタリカバリ）計画 → 大規模な障害や災害が発生した際に、データやシステムをどう復旧させるかをあらかじめ定めた計画のこと。'}},
+ {question:'データ運用の現場で、日々のバックアップ処理やデータ連携処理が正常に完了しているかどうかを常に確認する仕組みを指す言葉として最も近いものは？',choices:['運用監視','データクレンジング','正規化','匿名加工'],answer:0,difficulty:'normal',explain:{correct:'日々の処理が正常に完了しているかを継続的に確認する仕組みは「運用監視」と呼ばれ、問題の早期発見に役立ちます。',wrong:'データクレンジングは品質改善、正規化はデータ構造の設計、匿名加工は個人情報保護に関するテーマで、いずれも今回の説明とは異なります。',practice:'実務では、バックアップ処理が失敗した際に自動的にアラートが届く仕組みを整え、翌朝には問題が分かるようにしておきます。',term:null}},
+ {question:'ある会社で、データ運用担当者が急に退職してしまい、日々のバックアップ確認やトラブル対応の手順が誰にも分からなくなってしまいました。この事態を防ぐための工夫として適切なものは？',choices:['特定の担当者の記憶だけに頼った運用を続ける','日々の運用手順を文書化し、誰が見ても対応できるようにしておく（運用手順書・ランブック）','トラブル対応は今後一切行わないことにする','退職者が出ないよう祈るしかない'],answer:1,difficulty:'normal',explain:{correct:'日々の運用手順をあらかじめ文書化しておくことで、担当者の異動・退職があっても、他の人が対応を引き継げるようになります。',wrong:'①は属人化リスクをそのまま放置しています。③④は現実的な対策になっていません。',practice:'実務では、バックアップ確認やトラブル対応の手順を「運用手順書（ランブック）」としてまとめ、誰でも参照できる場所に置いておきます。',term:'運用手順書（ランブック） → 日々の運用作業やトラブル対応の手順を、誰が見ても実施できるようにまとめた文書のこと。'}},
+ {question:'システムの利用者が急増した場合に備えて、あらかじめストレージやサーバーの容量計画を立てておく取り組みを指す言葉として最も近いものは？',choices:['キャパシティプランニング','データクレンジング','名寄せ','ビジネスグロッサリー'],answer:0,difficulty:'normal',explain:{correct:'将来の利用増加を見越して、必要な容量や性能をあらかじめ計画しておく取り組みは「キャパシティプランニング」と呼ばれます。',wrong:'データクレンジングは品質改善、名寄せは重複データの統合、ビジネスグロッサリーは用語集に関するテーマで、いずれも容量計画とは異なります。',practice:'実務では、データ量の増加傾向を分析し、数か月〜数年先を見越してストレージの拡張計画を立てます。',term:'キャパシティプランニング → 将来の利用増加を見越して、必要な容量や性能をあらかじめ計画しておく取り組みのこと。'}},
+ {question:'データの保存先を選定する際、「その情報がどれくらい機密性が高いか」を考慮せず、すべてのデータを同じ設定のストレージに保存してしまう運用についての適切な指摘は？',choices:['機密性を考慮しなくても、特に問題は起きない','機密性の高い情報が、本来必要のない範囲にまで見えてしまうリスクがある','保存先を分けると、コストが必ず増加するので避けるべきである','機密性の高いデータほど、目立つ場所に保存すべきである'],answer:1,difficulty:'hard',explain:{correct:'機密性を考慮せずに一律の設定で保存すると、本来アクセスすべきでない人にまで情報が見えてしまうリスクが高まります。データの機密性に応じた保存先・アクセス制御の設計が必要です。',wrong:'①はリスクを軽視しています。③はコストと安全性のトレードオフを単純化しすぎています。④は機密情報の扱い方として明らかに不適切です。',practice:'実務では、個人情報や機密情報は、より厳格なアクセス制御が設定された保存先に分けて管理します。',term:null}},
+ {question:'データ運用における「稼働監視」と「バックアップ」の関係について、最も適切な説明はどれですか？',choices:['稼働監視さえしていれば、バックアップは不要である','稼働監視は日々の異常の早期発見、バックアップは万が一データが失われた際の復旧手段として、それぞれ異なる役割を持つ','バックアップさえあれば、稼働監視は不要である','両者はまったく同じ役割を持つため、どちらか一方だけでよい'],answer:1,difficulty:'normal',explain:{correct:'稼働監視は日々の処理の異常を早期に発見するための仕組みであり、バックアップは万が一データが失われた際に復旧するための備えです。両者は補い合う異なる役割を持っています。',wrong:'①③④はいずれも一方があれば他方が不要という誤った前提に基づいています。',practice:'実務では、稼働監視で異常を早期に検知しつつ、万が一に備えたバックアップも並行して整備するという、両輪の運用が基本となります。',term:null}}
+]
+};
+
+/* id付与してフラットな配列に変換 */
+const QUESTIONS = [];
+Object.keys(RAW_QUESTIONS).forEach(catKey => {
+  const cat = CATEGORIES.find(c => c.key === catKey);
+  RAW_QUESTIONS[catKey].forEach((q, i) => {
+    QUESTIONS.push({
+      id: `${catKey}-${i+1}`,
+      category: catKey,
+      tag: cat.name,
+      difficulty: q.difficulty || 'normal',
+      question: q.question,
+      choices: q.choices,
+      answer: q.answer,
+      explain: q.explain
+    });
+  });
+});
+
+/* ============================================================
+   復習ロジック用データ構造（localStorage）
+   キー: dm-study-progress
+   値: { [questionId]: { correctStreak, correctCount, wrongCount, lastAnsweredAt, nextReviewAt, mastered } }
+============================================================ */
+const STORAGE_KEY = 'dm-study-progress';
+const DAY = 24 * 60 * 60 * 1000;
+
+function loadProgress(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){ return {}; }
+}
+function saveProgress(p){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){}
+}
+let PROGRESS = loadProgress();
+
+/* ============================================================
+   中断・再開セッション（localStorage）
+   キー: dm-study-session
+   値: { ids: [問題id...], quizIndex, correctCount, mode }
+   ※ 常に「まだ回答していない問題」の時点で保存されるので、
+     再開すると必ずその問題から始められる。
+============================================================ */
+const SESSION_KEY = 'dm-study-session';
+
+function saveSession(){
+  try{
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      ids: quizQueue.map(q => q.id),
+      quizIndex, correctCount, mode: currentMode
+    }));
+  }catch(e){}
+}
+function loadSession(){
+  try{
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function clearSession(){
+  try{ localStorage.removeItem(SESSION_KEY); }catch(e){}
+}
+
+function renderResumeCard(){
+  const session = loadSession();
+  const card = document.getElementById('resume-card');
+  if(!session || !session.ids || session.ids.length === 0 || session.quizIndex >= session.ids.length){
+    card.style.display = 'none';
+    return;
+  }
+  const modeLabel = session.mode === 'review' ? '復習' : '新規';
+  card.style.display = 'flex';
+  document.getElementById('resume-title').textContent =
+    `${modeLabel}｜${session.quizIndex + 1} / ${session.ids.length}問目から`;
+}
+
+function resumeSession(){
+  const session = loadSession();
+  if(!session) return;
+  const restored = session.ids.map(id => QUESTIONS.find(q => q.id === id)).filter(Boolean);
+  if(restored.length === 0){ clearSession(); renderResumeCard(); return; }
+  quizQueue = restored;
+  quizIndex = Math.min(session.quizIndex, restored.length - 1);
+  correctCount = session.correctCount || 0;
+  currentMode = session.mode || 'new';
+  showScreen('screen-question');
+  renderQuestion();
+}
+
+function discardSession(){
+  clearSession();
+  renderResumeCard();
+}
+
+function pauseQuiz(){
+  // renderQuestion のたびにその時点の状態を保存しているので、
+  // ここでは保存済みの内容を維持したままTOPへ戻るだけでよい。
+  goTop();
+}
+
+function getEntry(qid){
+  return PROGRESS[qid] || { seen:false, weak:false, correctStreak:0, correctCount:0, wrongCount:0, lastAnsweredAt:null, nextReviewAt:null, mastered:false };
+}
+
+/* 正誤を記録し、次回復習タイミングを更新する
+   ・「新規」で初回から正解 → もともと知識がある可能性が高いとみなし、
+     いきなり7日後スタート（優先度を低く）にする
+   ・「新規」で不正解 → 初見なのは当然。まだ「苦手」にはせず、翌日以降の復習待ちにする
+   ・「復習」で不正解 → ここで初めて「苦手」に登録し、優先的に復習へ回す
+   ・正解2回目以降 → 通常どおり段階的に間隔を延ばす
+   ・正解3回目以降 → 「習得済み」として90日後まで優先度を下げる（苦手フラグも解除） */
+function recordAnswer(qid, isCorrect, isReviewMode){
+  const entry = getEntry(qid);
+  const now = Date.now();
+  const isFirstAttempt = !entry.seen;
+  entry.seen = true;
+  entry.lastAnsweredAt = now;
+  if(isCorrect){
+    entry.correctCount++;
+    if(isFirstAttempt){
+      // 新規で一発正解＝もともと強い分野とみなし、streak2相当（7日後）からスタート
+      entry.correctStreak = 2;
+      entry.mastered = false;
+      entry.weak = false;
+      entry.nextReviewAt = now + 7 * DAY;
+    } else {
+      entry.correctStreak++;
+      if(entry.correctStreak >= 3){
+        entry.mastered = true;
+        entry.weak = false;
+        entry.nextReviewAt = now + 90 * DAY;
+      } else {
+        entry.mastered = false;
+        entry.weak = false; // 復習で正解できたら苦手は解除
+        const days = entry.correctStreak === 1 ? 3 : 7;
+        entry.nextReviewAt = now + days * DAY;
+      }
+    }
+  } else {
+    entry.wrongCount++;
+    entry.correctStreak = 0;
+    entry.mastered = false;
+    entry.nextReviewAt = now + 1 * DAY;
+    entry.weak = !!isReviewMode; // 復習で間違えたときだけ「苦手」判定
+  }
+  PROGRESS[qid] = entry;
+  saveProgress(PROGRESS);
+  return entry;
+}
+
+/* 「新規」：まだ一度も解いていない問題を取り出す */
+function getNewQuestions(limit, catKey){
+  const pool = QUESTIONS.filter(q => {
+    if(catKey && q.category !== catKey) return false;
+    const e = PROGRESS[q.id];
+    return !e || !e.seen;
+  });
+  return pool.slice(0, limit || 10);
+}
+
+/* 「復習」：一度解いたことがあり、復習タイミングが来ている問題を優先度順に取り出す
+   優先度：苦手(0) ＞ 新規で不正解＝復習待ち(1) ＞ 正解1回目(2) ＞ 正解2回目(3) ＞ 習得済み(99・実質除外) */
+function getReviewQueue(limit, catKey){
+  const now = Date.now();
+  const scored = QUESTIONS.filter(q => {
+    if(catKey && q.category !== catKey) return false;
+    const e = PROGRESS[q.id];
+    return e && e.seen;
+  }).map(q => {
+    const e = PROGRESS[q.id];
+    let priority;
+    if(e.weak) priority = 0;
+    else if(e.mastered) priority = 99;
+    else if(e.correctStreak === 0) priority = 1;
+    else if(e.correctStreak === 1) priority = 2;
+    else priority = 3;
+    return { q, priority, due: e.nextReviewAt == null || e.nextReviewAt <= now, nextReviewAt: e.nextReviewAt || 0 };
+  }).filter(x => x.due);
+
+  scored.sort((a,b) => a.priority - b.priority || a.nextReviewAt - b.nextReviewAt);
+  return scored.slice(0, limit || 10).map(x => x.q);
+}
+
+function getCategoryStats(catKey){
+  const qs = QUESTIONS.filter(q => q.category === catKey);
+  if(qs.length === 0) return { total:0, mastered:0, pct:0 };
+  const masteredCount = qs.filter(q => PROGRESS[q.id] && PROGRESS[q.id].mastered).length;
+  return { total: qs.length, mastered: masteredCount, pct: Math.round((masteredCount/qs.length)*100) };
+}
+function getOverallPct(){
+  if(QUESTIONS.length===0) return 0;
+  const masteredCount = QUESTIONS.filter(q => PROGRESS[q.id] && PROGRESS[q.id].mastered).length;
+  return Math.round((masteredCount/QUESTIONS.length)*100);
+}
+
+/* ============================================================
+   用語集：全問題のexplain.termから抽出（重複除去）
+============================================================ */
+function buildGlossary(catFilter){
+  const seen = new Set();
+  const items = [];
+  QUESTIONS.forEach(q => {
+    if(!q.explain.term) return;
+    const [termName, ...rest] = q.explain.term.split('→');
+    const key = termName.trim();
+    if(seen.has(key)) return;
+    if(catFilter && q.category !== catFilter) return;
+    seen.add(key);
+    const cat = CATEGORIES.find(c => c.key === q.category);
+    items.push({ term: key, desc: rest.join('→').trim(), catName: cat.name, catColor: cat.color });
+  });
+  return items;
+}
+
+/* ============================================================
+   TOP：分野インデックス・ダッシュボード描画
+============================================================ */
+function renderIndex(){
+  const el = document.getElementById('index-list');
+  const main5 = CATEGORIES.slice(0,5);
+  el.innerHTML = main5.map((c,i) => {
+    const stats = getCategoryStats(c.key);
+    return `
+    <div class="index-row" onclick="openDetail('${c.key}','top')">
+      <div class="index-num">0${i+1}</div>
+      <div class="index-block" style="background:${c.color};"></div>
+      <div class="index-name">${c.name}</div>
+      <div class="index-track"><div class="index-fill" style="width:${stats.pct}%; background:${c.color};"></div></div>
+      <div class="index-pct">${stats.pct}%</div>
+      <div class="index-arrow">›</div>
+    </div>`;
+  }).join('');
+
+  const overall = getOverallPct();
+  document.getElementById('top-ring-num').innerHTML = `${overall}<small>%</small>`;
+  document.getElementById('top-ring').style.background = `conic-gradient(#2E2B33 0% ${overall}%, #E4DED2 ${overall}% 100%)`;
+
+  const dots = document.getElementById('top-streak-dots');
+  dots.innerHTML = [1,1,1,1,0].map(on => `<div class="dash-dot ${on?'on':''}"></div>`).join('');
+
+  const newQueue = getNewQuestions(9999);
+  const newLink = document.getElementById('new-link');
+  document.getElementById('new-count').textContent = `${newQueue.length}問`;
+  newLink.classList.toggle('muted', newQueue.length === 0);
+
+  const reviewQueue = getReviewQueue(9999);
+  const reviewLink = document.getElementById('review-link');
+  document.getElementById('review-count').textContent = `${reviewQueue.length}問`;
+  reviewLink.classList.toggle('muted', reviewQueue.length === 0);
+
+  document.getElementById('top-date').textContent =
+    new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short' });
+}
+
+function renderAllCategories(){
+  const el = document.getElementById('all-index-list');
+  el.innerHTML = CATEGORIES.map((c,i) => {
+    const stats = getCategoryStats(c.key);
+    return `
+    <div class="index-row" onclick="openDetail('${c.key}','all')">
+      <div class="index-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="index-block" style="background:${c.color};"></div>
+      <div class="index-name">${c.name}</div>
+      <div class="index-track"><div class="index-fill" style="width:${stats.pct}%; background:${c.color};"></div></div>
+      <div class="index-pct">${stats.pct}%</div>
+      <div class="index-arrow">›</div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   画面遷移
+============================================================ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goTop(){ renderIndex(); renderResumeCard(); renderMockCard(); showScreen('screen-top'); }
+function showAllCategories(){ renderAllCategories(); showScreen('screen-all-categories'); }
+
+let detailFrom = 'top';
+function openDetail(key, from){
+  detailFrom = from;
+  const c = CATEGORIES.find(x => x.key === key);
+  const stats = getCategoryStats(key);
+  document.getElementById('detail-chip').style.background = c.color;
+  document.getElementById('detail-name').textContent = c.name;
+  document.getElementById('detail-pct').innerHTML = `${stats.pct}<small>%</small>`;
+  document.getElementById('detail-count').textContent = stats.total ? `${stats.total}問` : '-';
+  document.getElementById('detail-desc').textContent = c.desc;
+
+  const actionEl = document.getElementById('detail-action');
+  if(stats.total){
+    const newCount = getNewQuestions(9999, key).length;
+    const reviewCount = getReviewQueue(9999, key).length;
+    let html = '';
+    if(newCount > 0){
+      html += `<button class="btn btn-solid btn-full" onclick="startNewForCategory('${key}')">新しい問題を解く（${newCount}問）</button>`;
+    } else {
+      html += `<div class="detail-empty">この分野は新規問題を解き終えました。復習で定着させましょう。</div>`;
+    }
+    if(reviewCount > 0){
+      html += `<div style="margin-top:10px;"><button class="btn btn-outline btn-full" onclick="startReview(${reviewCount},'${key}')">この分野を復習する（${reviewCount}問）</button></div>`;
+    }
+    actionEl.innerHTML = html;
+  } else {
+    actionEl.innerHTML = `<div class="detail-empty">この分野の問題は、いま準備中です。<br>もう少しお待ちください。</div>
+      <button class="btn btn-disabled btn-full">準備中</button>`;
+  }
+  document.getElementById('detail-glossary-link').onclick = () => showGlossary('detail', key);
+  showScreen('screen-category-detail');
+}
+function backFromDetail(){
+  showScreen(detailFrom === 'all' ? 'screen-all-categories' : 'screen-top');
+}
+
+/* ============================================================
+   用語集画面
+============================================================ */
+let glossaryFrom = 'top';
+function showGlossary(from, catKey){
+  glossaryFrom = { from, catKey };
+  const items = buildGlossary(catKey);
+  const cat = catKey ? CATEGORIES.find(c => c.key === catKey) : null;
+  document.getElementById('glossary-sub').textContent =
+    cat ? `${cat.name}に関する用語` : 'やさしい言い換えでまとめています（全分野）';
+
+  const listEl = document.getElementById('glossary-list');
+  if(items.length === 0){
+    listEl.innerHTML = `<div class="detail-empty">まだ用語が登録されていません。</div>`;
+  } else {
+    listEl.innerHTML = items.map(it => `
+      <div class="glossary-row">
+        <div class="glossary-cat"><span class="glossary-chip" style="background:${it.catColor};"></span>${it.catName}</div>
+        <div class="glossary-term">${it.term}</div>
+        <div class="glossary-desc">${it.desc}</div>
+      </div>
+    `).join('');
+  }
+  showScreen('screen-glossary');
+}
+function backFromGlossary(){
+  if(glossaryFrom.from === 'detail'){
+    openDetail(glossaryFrom.catKey, detailFrom);
+  } else {
+    goTop();
+  }
+}
+
+/* ============================================================
+   出題ロジック
+============================================================ */
+let quizQueue = [], quizIndex = 0, correctCount = 0, currentMode = 'new';
+
+function startNewForCategory(key, limit){
+  const qs = getNewQuestions(limit || 5, key);
+  if(qs.length === 0) return;
+  quizQueue = qs; currentMode = 'new';
+  quizIndex = 0; correctCount = 0;
+  showScreen('screen-question');
+  renderQuestion();
+}
+function startNewQuiz(limit){
+  const qs = getNewQuestions(limit || 5);
+  if(qs.length === 0) return;
+  quizQueue = qs; currentMode = 'new';
+  quizIndex = 0; correctCount = 0;
+  showScreen('screen-question');
+  renderQuestion();
+}
+function startReview(limit, catKey){
+  const queue = getReviewQueue(limit || 10, catKey);
+  if(queue.length === 0) return;
+  quizQueue = queue; currentMode = 'review';
+  quizIndex = 0; correctCount = 0;
+  showScreen('screen-question');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = quizQueue[quizIndex];
+  document.getElementById('q-progress-text').textContent =
+    String(quizIndex+1).padStart(2,'0') + ' / ' + String(quizQueue.length).padStart(2,'0');
+  document.getElementById('q-progress-bar').style.width = `${(quizIndex/quizQueue.length)*100}%`;
+  document.getElementById('q-tag').textContent = q.tag;
+  document.getElementById('q-mode-badge').textContent = currentMode === 'review' ? '復習' : '新規';
+  const entry = PROGRESS[q.id];
+  document.getElementById('q-weak-badge').style.display = (entry && entry.weak) ? 'inline-block' : 'none';
+  document.getElementById('q-text').textContent = q.question;
+
+  const choicesEl = document.getElementById('q-choices');
+  choicesEl.innerHTML = q.choices.map((c,i) => `
+    <div class="choice" data-index="${i}" onclick="selectChoice(${i})">
+      <div class="choice-mark">${String.fromCharCode(65+i)}</div>
+      <div>${c}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('q-feedback').classList.remove('show');
+  document.getElementById('fb-mastered').classList.remove('show');
+  document.getElementById('fb-weak-set').classList.remove('show');
+  document.getElementById('fb-weak-cleared').classList.remove('show');
+  document.getElementById('q-next-btn').style.display = 'none';
+
+  saveSession();
+}
+
+function selectChoice(i){
+  const q = quizQueue[quizIndex];
+  const isCorrect = i === q.answer;
+  const wasWeak = !!(PROGRESS[q.id] && PROGRESS[q.id].weak);
+  if(isCorrect) correctCount++;
+  const entry = recordAnswer(q.id, isCorrect, currentMode === 'review');
+
+  document.querySelectorAll('#q-choices .choice').forEach(el => {
+    const idx = Number(el.dataset.index);
+    el.onclick = null;
+    if(idx === q.answer) el.classList.add('correct');
+    else if(idx === i) el.classList.add('wrong');
+    else el.classList.add('dim');
+  });
+
+  const fb = document.getElementById('q-feedback');
+  const head = document.getElementById('fb-head');
+  head.textContent = isCorrect ? '正解です' : '惜しい！考え方は近いです';
+  head.className = 'feedback-head ' + (isCorrect ? 'is-correct' : 'is-wrong');
+  fb.classList.add('show');
+
+  document.getElementById('fb-correct').textContent = q.explain.correct;
+  document.getElementById('fb-wrong').textContent = q.explain.wrong;
+  document.getElementById('fb-practice').textContent = q.explain.practice;
+
+  if(q.explain.term){
+    document.getElementById('fb-term-wrap').style.display = 'block';
+    document.getElementById('fb-term').textContent = q.explain.term;
+  } else {
+    document.getElementById('fb-term-wrap').style.display = 'none';
+  }
+
+  document.getElementById('fb-mastered').classList.toggle('show', entry.mastered);
+  document.getElementById('fb-weak-set').classList.toggle('show', entry.weak && !wasWeak);
+  document.getElementById('fb-weak-cleared').classList.toggle('show', wasWeak && !entry.weak && isCorrect);
+
+  const nextBtn = document.getElementById('q-next-btn');
+  nextBtn.style.display = 'block';
+  nextBtn.textContent = (quizIndex+1 < quizQueue.length) ? 'つぎへ' : '結果を見る';
+}
+
+function nextQuestion(){
+  quizIndex++;
+  if(quizIndex < quizQueue.length){
+    renderQuestion();
+  } else {
+    document.getElementById('q-progress-bar').style.width = '100%';
+    showResult();
+  }
+}
+
+function showResult(){
+  clearSession();
+  const total = quizQueue.length;
+  document.getElementById('result-score').innerHTML = `${correctCount}<small>/${total}</small>`;
+  const overall = getOverallPct();
+  document.getElementById('result-ring-num').innerHTML = `${overall}<small>%</small>`;
+  document.getElementById('result-new-count').textContent = `${getNewQuestions(9999).length}問`;
+  document.getElementById('result-review-count').textContent = `${getReviewQueue(9999).length}問`;
+
+  const ratio = correctCount / total;
+  const msg = document.getElementById('result-msg');
+  const sub = document.getElementById('result-sub');
+  if(ratio === 1){
+    msg.textContent = 'お見事です';
+    sub.textContent = 'この調子で、また明日も少しずつ進めましょう';
+  } else if(ratio >= 0.6){
+    msg.textContent = 'おつかれさまでした';
+    sub.textContent = '間違えた問題は伸びしろです。復習に回しておきますね';
+  } else {
+    msg.textContent = '今日も一歩進みました';
+    sub.textContent = 'ここ、少し苦手かも。いっしょに復習しよう';
+  }
+  showScreen('screen-result');
+}
+
+/* ============================================================
+   模擬試験モード
+============================================================ */
+const MOCK_COUNTS = {
+  governance:4, quality:4, metadata:4, master:3, security:3,
+  architecture:3, warehouse:2, integration:2, content:2, modeling:2, storage:1
+};
+const MOCK_SESSION_KEY = 'dm-study-mock-session';
+const MOCK_TOTAL_SECONDS = 60 * 60;
+
+function shuffleArray(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function pickMockQuestions(){
+  let picked = [];
+  Object.keys(MOCK_COUNTS).forEach(key => {
+    const pool = shuffleArray(QUESTIONS.filter(q => q.category === key));
+    picked = picked.concat(pool.slice(0, MOCK_COUNTS[key]));
+  });
+  return shuffleArray(picked);
+}
+
+let mockQueue = [], mockAnswers = [], mockIndex = 0, mockSecondsLeft = MOCK_TOTAL_SECONDS, mockTimerInterval = null;
+
+function saveMockSession(){
+  try{
+    localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify({
+      ids: mockQueue.map(q => q.id), answers: mockAnswers, index: mockIndex, secondsLeft: mockSecondsLeft
+    }));
+  }catch(e){}
+}
+function loadMockSession(){
+  try{
+    const raw = localStorage.getItem(MOCK_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function clearMockSession(){
+  try{ localStorage.removeItem(MOCK_SESSION_KEY); }catch(e){}
+}
+
+function renderMockCard(){
+  const session = loadMockSession();
+  const btn = document.getElementById('mock-card-btn');
+  if(!btn) return;
+  if(session && session.ids && session.ids.length){
+    btn.textContent = `模擬試験を再開する（${session.index + 1}/${session.ids.length}問目）`;
+    btn.onclick = resumeMockExam;
+  } else {
+    btn.textContent = '模擬試験について見る';
+    btn.onclick = showMockIntro;
+  }
+}
+
+function showMockIntro(){ showScreen('screen-mock-intro'); }
+
+function startMockExam(){
+  mockQueue = pickMockQuestions();
+  mockAnswers = new Array(mockQueue.length).fill(null);
+  mockIndex = 0;
+  mockSecondsLeft = MOCK_TOTAL_SECONDS;
+  showScreen('screen-mock-question');
+  renderMockQuestion();
+  startMockTimer();
+  saveMockSession();
+}
+function resumeMockExam(){
+  const s = loadMockSession();
+  if(!s) return;
+  const restored = s.ids.map(id => QUESTIONS.find(q => q.id === id)).filter(Boolean);
+  if(restored.length === 0){ clearMockSession(); renderMockCard(); return; }
+  mockQueue = restored;
+  mockAnswers = s.answers || new Array(restored.length).fill(null);
+  mockIndex = Math.min(s.index, restored.length - 1);
+  mockSecondsLeft = s.secondsLeft || MOCK_TOTAL_SECONDS;
+  showScreen('screen-mock-question');
+  renderMockQuestion();
+  startMockTimer();
+}
+function pauseMockExam(){
+  saveMockSession();
+  stopMockTimer();
+  renderMockCard();
+  goTop();
+}
+
+function startMockTimer(){
+  stopMockTimer();
+  updateMockTimerDisplay();
+  mockTimerInterval = setInterval(() => {
+    mockSecondsLeft--;
+    updateMockTimerDisplay();
+    if(mockSecondsLeft <= 0){
+      stopMockTimer();
+      finishMockExam();
+    }
+  }, 1000);
+}
+function stopMockTimer(){
+  if(mockTimerInterval){ clearInterval(mockTimerInterval); mockTimerInterval = null; }
+}
+function updateMockTimerDisplay(){
+  const el = document.getElementById('mock-timer');
+  if(!el) return;
+  const m = Math.max(0, Math.floor(mockSecondsLeft / 60));
+  const s = Math.max(0, mockSecondsLeft % 60);
+  el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.classList.toggle('low', mockSecondsLeft <= 300);
+}
+
+function renderMockQuestion(){
+  const q = mockQueue[mockIndex];
+  document.getElementById('mock-progress-text').textContent =
+    String(mockIndex+1).padStart(2,'0') + ' / ' + String(mockQueue.length).padStart(2,'0');
+  document.getElementById('mock-progress-bar').style.width = `${(mockIndex/mockQueue.length)*100}%`;
+  document.getElementById('mock-tag').textContent = q.tag;
+  document.getElementById('mock-text').textContent = q.question;
+
+  const selected = mockAnswers[mockIndex];
+  const choicesEl = document.getElementById('mock-choices');
+  choicesEl.innerHTML = q.choices.map((c,i) => `
+    <div class="choice mock-choice ${selected === i ? 'selected' : ''}" data-index="${i}" onclick="selectMockChoice(${i})">
+      <div class="choice-mark">${String.fromCharCode(65+i)}</div>
+      <div>${c}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('mock-prev-btn').style.visibility = mockIndex === 0 ? 'hidden' : 'visible';
+  document.getElementById('mock-next-btn').textContent =
+    (mockIndex + 1 < mockQueue.length) ? '次へ' : '採点する';
+}
+function selectMockChoice(i){
+  mockAnswers[mockIndex] = i;
+  renderMockQuestion();
+  saveMockSession();
+}
+function mockNext(){
+  if(mockIndex + 1 < mockQueue.length){
+    mockIndex++;
+    renderMockQuestion();
+    saveMockSession();
+  } else {
+    finishMockExam();
+  }
+}
+function mockPrev(){
+  if(mockIndex > 0){
+    mockIndex--;
+    renderMockQuestion();
+  }
+}
+
+function finishMockExam(){
+  stopMockTimer();
+  clearMockSession();
+
+  let correct = 0;
+  const catStats = {};
+  mockQueue.forEach((q, i) => {
+    const isCorrect = mockAnswers[i] === q.answer;
+    if(isCorrect) correct++;
+    if(!catStats[q.category]) catStats[q.category] = { correct:0, total:0 };
+    catStats[q.category].total++;
+    if(isCorrect) catStats[q.category].correct++;
+  });
+
+  document.getElementById('mock-score-num').innerHTML = `${correct}<small>/${mockQueue.length}</small>`;
+  const pct = Math.round((correct / mockQueue.length) * 100);
+  const sub = document.getElementById('mock-score-sub');
+  if(pct >= 80) sub.textContent = `正答率${pct}%。かなり仕上がってきています`;
+  else if(pct >= 60) sub.textContent = `正答率${pct}%。あと一歩、苦手分野を重点的に`;
+  else sub.textContent = `正答率${pct}%。まだ伸びしろがたくさんあります`;
+
+  const breakdownEl = document.getElementById('mock-cat-breakdown');
+  breakdownEl.innerHTML = Object.keys(catStats).map(key => {
+    const c = CATEGORIES.find(cc => cc.key === key);
+    const s = catStats[key];
+    return `
+    <div class="mock-cat-row">
+      <div class="mock-cat-chip" style="background:${c.color};"></div>
+      <div class="mock-cat-name">${c.name}</div>
+      <div class="mock-cat-score">${s.correct} / ${s.total}</div>
+    </div>`;
+  }).join('');
+
+  const wrongCount = mockQueue.length - correct;
+  document.getElementById('mock-review-count-label').textContent = `全${mockQueue.length}問（誤答${wrongCount}問）`;
+  document.getElementById('mock-add-review-btn').disabled = wrongCount === 0;
+  document.getElementById('mock-add-review-btn').onclick = addMockWrongToReview;
+
+  const reviewEl = document.getElementById('mock-review-list');
+  reviewEl.innerHTML = mockQueue.map((q, i) => {
+    const isCorrect = mockAnswers[i] === q.answer;
+    const yourAnswer = mockAnswers[i] != null ? q.choices[mockAnswers[i]] : '（未回答）';
+    return `
+    <details class="mock-review-item">
+      <summary>
+        <div class="mock-review-mark ${isCorrect ? 'ok' : 'ng'}">${isCorrect ? '○' : '×'}</div>
+        <div class="mock-review-q">${String(i+1).padStart(2,'0')}. ${q.question.slice(0, 40)}${q.question.length > 40 ? '…' : ''}</div>
+      </summary>
+      <div class="mock-review-body">
+        <div><b>あなたの回答：</b>${yourAnswer}</div>
+        <div><b>正解：</b>${q.choices[q.answer]}</div>
+        <div>${q.explain.correct}</div>
+      </div>
+    </details>`;
+  }).join('');
+
+  showScreen('screen-mock-result');
+}
+
+function addMockWrongToReview(){
+  mockQueue.forEach((q, i) => {
+    if(mockAnswers[i] !== q.answer){
+      recordAnswer(q.id, false, false);
+    }
+  });
+  document.getElementById('mock-add-review-btn').textContent = '復習に追加しました';
+  document.getElementById('mock-add-review-btn').disabled = true;
+}
+
+/* ============================================================
+   科目B：ケース問題（軽量版：シナリオ＋設問2問）
+============================================================ */
+const CASE_QUESTIONS = [
+  {
+    id:'case-1', category:'governance', title:'品質トラブル、まず動くのは誰？',
+    scenario:'A社では、顧客データの扱いについて以下のようなルールを定めています。\n\nある日、コールセンターから「同じ顧客なのに登録が2件あり、対応履歴が分断されている」という報告が入りました。',
+    table:[
+      { role:'データオーナー', desc:'営業企画部長：顧客データの意味・利用ルールに最終責任を持つ' },
+      { role:'データスチュワード', desc:'営業事務チーム：日々の品質確認・表記ゆれの是正などの実務を担う' },
+      { role:'情報システム部', desc:'システムの技術的な保守・障害対応を担う（データの意味には関与しない）' }
+    ],
+    subs:[
+      {
+        question:'この件について、まず一次対応（重複データの確認・是正）を行うべきなのは誰ですか？',
+        choices:['情報システム部','営業事務チーム（データスチュワード）','営業企画部長（データオーナー）','コールセンターの担当者が個別の判断で修正する'],
+        answer:1,
+        explain:'日々の品質確認や表記ゆれの是正といった実務は、データスチュワードの役割です。まずは営業事務チームが一次対応にあたるのが適切です。'
+      },
+      {
+        question:'今後同様の重複が起きないよう、恒久的な入力ルールの変更を最終的に承認するのは誰ですか？',
+        choices:['情報システム部','営業事務チーム（データスチュワード）','営業企画部長（データオーナー）','コールセンターの責任者'],
+        answer:2,
+        explain:'ルールそのものの変更・承認は、データの意味や利用ルールに最終責任を持つデータオーナー（営業企画部長）の役割です。'
+      }
+    ]
+  },
+  {
+    id:'case-2', category:'quality', title:'EC×実店舗、統合の前に見えてきた課題',
+    scenario:'B社はEC事業と実店舗事業の顧客データを一本化しようとしています。データカタログには「顧客ID」「氏名」「電話番号」「メールアドレス」などの項目定義が記載されていますが、実際のデータを調査したところ、次のような実態が判明しました。\n\n・電話番号の形式が、店舗システムでは「090-1234-5678」、ECシステムでは「09012345678」とバラバラ\n・メールアドレスが未入力の顧客が、EC側に多数存在する\n・同一人物と思われる顧客が、名前の表記ゆれにより別々のIDで複数登録されている',
+    table:null,
+    subs:[
+      {
+        question:'この状況で、統合を進める前に最優先で取り組むべき本質的な課題はどれですか？',
+        choices:['サーバーの処理速度を上げること','表記ゆれや形式の不統一によるデータ品質・名寄せの問題','ECサイトのデザインを変更すること','店舗のレジシステムを入れ替えること'],
+        answer:1,
+        explain:'表面的な性能やデザインの問題ではなく、表記の不統一や重複登録といったデータ品質・名寄せの問題こそが、統合の質を左右する本質的な課題です。'
+      },
+      {
+        question:'統合を進めるにあたり、現実的な対応として最も適切なものはどれですか？',
+        choices:['全顧客データをいったん削除し、ゼロから登録し直す','電話番号などの形式を統一するルールを定め、名寄せ処理を行った上でマスタを統合する','データ統合は諦め、2つのシステムを永久に別々に運用する','表記ゆれは無視したまま、そのまま統合する'],
+        answer:1,
+        explain:'形式の統一ルールを定めた上で名寄せ処理を行い、整った状態でマスタを統合するのが現実的な進め方です。データを消してしまったり、問題を放置したりするのは適切な対応ではありません。'
+      }
+    ]
+  },
+  {
+    id:'case-3', category:'integration', title:'商品コードがシステムごとにバラバラだった話',
+    scenario:'C社では、受注システム・在庫システム・会計システムがそれぞれ個別に商品コードを管理しており、新商品を登録するたびに3つのシステムへ手作業で入力していました。ある日、担当者が在庫システムへの入力を忘れたため、実際には在庫があるにもかかわらず「欠品」と表示され、販売機会を逃してしまいました。',
+    table:null,
+    subs:[
+      {
+        question:'このトラブルの根本的な原因として、最も適切なものはどれですか？',
+        choices:['担当者の入力ミスだけが原因であり、他に問題はない','商品マスタが一元化されておらず、システムごとに個別入力が必要な設計になっていること','在庫システムのサーバー性能が低いこと','受注システムのデザインが分かりにくいこと'],
+        answer:1,
+        explain:'個人のミスは引き金にすぎず、根本的な原因は商品マスタが一元化されておらず、同じ情報を複数箇所に個別入力しなければならない設計そのものにあります。'
+      },
+      {
+        question:'今後同様のトラブルを防ぐための恒久対策として、最も適切なものはどれですか？',
+        choices:['入力担当者を増やして、目視確認を徹底する','商品マスタを一元管理し、各システムがそこを参照・連携する仕組みに変更する','在庫システムの利用を取りやめる','欠品表示の仕組み自体をなくす'],
+        answer:1,
+        explain:'商品マスタを一元管理し、各システムがそれを参照・連携する仕組みに変更することで、入力の重複やヌケそのものをなくすことができます。人手を増やす対応は、根本原因が残ったままの対症療法です。'
+      }
+    ]
+  }
+];
+
+let currentCase = null, currentCaseAnswers = [], currentCaseChecked = false;
+
+function renderCaseList(){
+  const el = document.getElementById('case-list');
+  el.innerHTML = CASE_QUESTIONS.map(c => {
+    const cat = CATEGORIES.find(cc => cc.key === c.category);
+    return `
+    <div class="case-card" onclick="openCase('${c.id}')">
+      <div class="case-card-chip" style="background:${cat.color};"></div>
+      <div class="case-card-body">
+        <div class="case-card-cat">${cat.name}</div>
+        <div class="case-card-title">${c.title}</div>
+      </div>
+      <div class="case-card-arrow">›</div>
+    </div>`;
+  }).join('');
+}
+function showCaseList(){ renderCaseList(); showScreen('screen-case-list'); }
+
+function openCase(id){
+  currentCase = CASE_QUESTIONS.find(c => c.id === id);
+  currentCaseAnswers = new Array(currentCase.subs.length).fill(null);
+  currentCaseChecked = false;
+
+  const cat = CATEGORIES.find(cc => cc.key === currentCase.category);
+  document.getElementById('case-tag').textContent = cat.name;
+  document.getElementById('case-title').textContent = currentCase.title;
+  document.getElementById('case-scenario').textContent = currentCase.scenario;
+
+  const tableEl = document.getElementById('case-table');
+  if(currentCase.table){
+    tableEl.style.display = 'block';
+    tableEl.innerHTML = currentCase.table.map(row => `
+      <div class="case-table-row">
+        <div class="case-table-role">${row.role}</div>
+        <div class="case-table-desc">${row.desc}</div>
+      </div>
+    `).join('');
+  } else {
+    tableEl.style.display = 'none';
+    tableEl.innerHTML = '';
+  }
+
+  renderCaseSubs();
+  document.getElementById('case-check-btn').textContent = 'こたえを確認する';
+  document.getElementById('case-check-btn').disabled = false;
+  document.getElementById('case-check-btn').onclick = checkCaseAnswers;
+  showScreen('screen-case');
+}
+
+function renderCaseSubs(){
+  const el = document.getElementById('case-subs');
+  el.innerHTML = currentCase.subs.map((sub, si) => `
+    <div class="case-sub-block">
+      <div class="case-sub-label">設問${si+1}</div>
+      <div class="case-sub-q">${sub.question}</div>
+      <div class="choices" id="case-choices-${si}">
+        ${sub.choices.map((c,i) => `
+          <div class="choice" data-sub="${si}" data-index="${i}" onclick="selectCaseChoice(${si}, ${i})">
+            <div class="choice-mark">${String.fromCharCode(65+i)}</div>
+            <div>${c}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="case-sub-explain" id="case-explain-${si}"></div>
+    </div>
+  `).join('');
+}
+
+function selectCaseChoice(si, i){
+  if(currentCaseChecked) return;
+  currentCaseAnswers[si] = i;
+  document.querySelectorAll(`#case-choices-${si} .choice`).forEach(el => {
+    el.classList.toggle('selected', Number(el.dataset.index) === i);
+  });
+}
+
+function checkCaseAnswers(){
+  if(currentCaseAnswers.includes(null)){
+    alert('すべての設問に回答してから確認してください。');
+    return;
+  }
+  currentCaseChecked = true;
+  let correctCount = 0;
+
+  currentCase.subs.forEach((sub, si) => {
+    const chosen = currentCaseAnswers[si];
+    const isCorrect = chosen === sub.answer;
+    if(isCorrect) correctCount++;
+
+    document.querySelectorAll(`#case-choices-${si} .choice`).forEach(el => {
+      const idx = Number(el.dataset.index);
+      el.onclick = null;
+      el.classList.remove('selected');
+      if(idx === sub.answer) el.classList.add('correct');
+      else if(idx === chosen) el.classList.add('wrong');
+      else el.classList.add('dim');
+    });
+
+    const explainEl = document.getElementById(`case-explain-${si}`);
+    explainEl.textContent = (isCorrect ? '○ 正解です。' : '△ 惜しい、もう一度考えてみましょう。') + ' ' + sub.explain;
+    explainEl.className = 'case-sub-explain show ' + (isCorrect ? 'is-correct' : 'is-wrong');
+  });
+
+  const btn = document.getElementById('case-check-btn');
+  btn.textContent = `${correctCount} / ${currentCase.subs.length}問 正解`;
+  btn.disabled = true;
+}
+
+/* 初期描画 */
+renderIndex();
+renderResumeCard();
+renderMockCard();
+</script>
+</body>
+</html>
