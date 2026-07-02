@@ -710,6 +710,39 @@ function saveProgress(p){
 let PROGRESS = loadProgress();
 
 /* ============================================================
+   連続学習日数（localStorage）
+   キー: dm-study-streak
+   値: { lastStudyDate: 'YYYY-MM-DD', currentStreak: number }
+   ※ 新規/復習/模擬試験/ケース問題のいずれかに1問でも回答したら
+     「その日は学習した」とみなして記録する。
+============================================================ */
+const STREAK_KEY = 'dm-study-streak';
+
+function todayStr(offsetDays){
+  const d = new Date();
+  if(offsetDays) d.setDate(d.getDate() + offsetDays);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function loadStreak(){
+  try{
+    const raw = localStorage.getItem(STREAK_KEY);
+    return raw ? JSON.parse(raw) : { lastStudyDate:null, currentStreak:0 };
+  }catch(e){ return { lastStudyDate:null, currentStreak:0 }; }
+}
+function saveStreak(s){
+  try{ localStorage.setItem(STREAK_KEY, JSON.stringify(s)); }catch(e){}
+}
+function markStudiedToday(){
+  const s = loadStreak();
+  const today = todayStr();
+  if(s.lastStudyDate === today) return; // 今日はすでにカウント済み
+  const yesterday = todayStr(-1);
+  s.currentStreak = (s.lastStudyDate === yesterday) ? (s.currentStreak || 0) + 1 : 1;
+  s.lastStudyDate = today;
+  saveStreak(s);
+}
+
+/* ============================================================
    中断・再開セッション（localStorage）
    キー: dm-study-session
    値: { ids: [問題id...], quizIndex, correctCount, mode }
@@ -785,6 +818,7 @@ function getEntry(qid){
    ・正解2回目以降 → 通常どおり段階的に間隔を延ばす
    ・正解3回目以降 → 「習得済み」として90日後まで優先度を下げる（苦手フラグも解除） */
 function recordAnswer(qid, isCorrect, isReviewMode){
+  markStudiedToday();
   const entry = getEntry(qid);
   const now = Date.now();
   const isFirstAttempt = !entry.seen;
@@ -910,8 +944,13 @@ function renderIndex(){
   document.getElementById('top-ring-num').innerHTML = `${overall}<small>%</small>`;
   document.getElementById('top-ring').style.background = `conic-gradient(#2E2B33 0% ${overall}%, #E4DED2 ${overall}% 100%)`;
 
+  const streak = loadStreak();
+  const streakCount = streak.currentStreak || 0;
+  document.getElementById('top-streak').innerHTML = `${streakCount}<small>日</small>`;
   const dots = document.getElementById('top-streak-dots');
-  dots.innerHTML = [1,1,1,1,0].map(on => `<div class="dash-dot ${on?'on':''}"></div>`).join('');
+  const filled = Math.min(streakCount, 5);
+  dots.innerHTML = Array.from({length:5}, (_, i) => i < filled ? 1 : 0)
+    .map(on => `<div class="dash-dot ${on?'on':''}"></div>`).join('');
 
   const newQueue = getNewQuestions(9999);
   const newLink = document.getElementById('new-link');
@@ -1316,6 +1355,7 @@ function mockPrev(){
 function finishMockExam(){
   stopMockTimer();
   clearMockSession();
+  markStudiedToday();
 
   let correct = 0;
   const catStats = {};
@@ -1531,6 +1571,7 @@ function checkCaseAnswers(){
     alert('すべての設問に回答してから確認してください。');
     return;
   }
+  markStudiedToday();
   currentCaseChecked = true;
   let correctCount = 0;
 
